@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", ":dependencyDashboard", ":semanticCommits", "group:recommended"],
   "labels": ["dependencies"],
-  "schedule": ["before 6am on monday"],
+  "schedule": ["at any time"],
   "rangeStrategy": "bump",
   "prConcurrentLimit": 10,
   "packageRules": [
