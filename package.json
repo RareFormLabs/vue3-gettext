@@ -1,14 +1,17 @@
 {
-  "name": "vue3-gettext",
+  "name": "@rareformlabs/vue3-gettext",
   "version": "4.0.0-beta.1",
-  "description": "Translate Vue 3 applications with gettext",
-  "homepage": "https://jshmrtn.github.io/vue3-gettext/",
+  "description": "Translate Vue 3 applications with gettext (maintained fork)",
+  "homepage": "https://github.com/RareFormLabs/vue3-gettext",
   "author": "Leo Zurbriggen",
   "license": "MIT",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jshmrtn/vue3-gettext"
+    "url": "https://github.com/RareFormLabs/vue3-gettext.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RareFormLabs/vue3-gettext/issues"
   },
   "keywords": [
     "gettext",
@@ -21,7 +24,8 @@
     "typescript"
   ],
   "publishConfig": {
-    "registry": "https://registry.npmjs.org"
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   },
   "bin": {
     "vue-gettext-compile": "./dist/gettext_compile.js",

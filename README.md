@@ -1,8 +1,12 @@
 <h1 align="center">
-  <a href="https://www.npmjs.com/package/vue3-gettext" target="_blank">
-  Vue 3 Gettext 💬
+  <a href="https://www.npmjs.com/package/@rareformlabs/vue3-gettext" target="_blank">
+    Vue 3 Gettext 💬
   </a>
 </h1>
+
+<p align="center">
+  <strong>Maintained fork</strong> of <a href="https://github.com/jshmrtn/vue3-gettext">jshmrtn/vue3-gettext</a>
+</p>
 <br/>
 
 Translate [Vue 3](http://vuejs.org) applications with [gettext](https://en.wikipedia.org/wiki/Gettext).
@@ -11,6 +15,13 @@ Translate [Vue 3](http://vuejs.org) applications with [gettext](https://en.wikip
 <p align="center">
  <a href="https://jshmrtn.github.io/vue3-gettext/">Getting started</a> | <a href="https://jshmrtn.github.io/vue3-gettext/demo.html">Demo</a> | <a href="https://jshmrtn.github.io/vue3-gettext/setup.html">Documentation</a> | <a href="README_zh.md">中文</a>
 </p>
+
+## Install
+
+```bash
+npm i @rareformlabs/vue3-gettext
+```
+
 <br>
 
 ## Basic usage
