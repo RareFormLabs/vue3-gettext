@@ -67,7 +67,7 @@
     "@types/command-line-args": "^5.2.3",
     "@types/glob": "^9.0.0",
     "@types/node": "^24.3.0",
-    "@typescript-eslint/parser": "^8.41.0",
+    "@typescript-eslint/parser": "^8.56.0",
     "@vitejs/plugin-vue": "^6.0.4",
     "@vue/test-utils": "^2.4.6",
     "eslint": "^9.34.0",
