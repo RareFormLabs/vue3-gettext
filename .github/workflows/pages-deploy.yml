@@ -1,22 +1,45 @@
 name: pages
+
 on:
   push:
-    branches:
-      - master
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-24.04
+
     steps:
-      - name: checkout
-        uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: build
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install system deps
         run: |
-          npm ci
-          npm run docs:build
+          sudo apt-get update
+          sudo apt-get install -y gettext
 
-      - name: deploy
+      - name: Install deps
+        run: npm ci
+
+      - name: Build docs
+        run: npm run docs:build
+
+      - name: Deploy to pages branch
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: pages
           folder: docs/.vitepress/dist
+          clean: true
