@@ -94,5 +94,10 @@
     "dist",
     "LICENSE",
     "README.md"
-  ]
+  ],
+  "overrides": {
+    "glob": {
+      "minimatch": "^10.2.2"
+    }
+  }
 }
