@@ -97,7 +97,7 @@
   ],
   "overrides": {
     "glob": {
-      "minimatch": "~10.2.2"
+      "minimatch": "^10.2.2"
     }
   }
 }
