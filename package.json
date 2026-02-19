@@ -75,7 +75,7 @@
     "eslint-plugin-vue": "^10.4.0",
     "happy-dom": "^18.0.1",
     "prettier": "^3.6.2",
-    "tsup": "^8.5.0",
+    "tsup": "^8.5.1",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "vite": "^7.1.3",
