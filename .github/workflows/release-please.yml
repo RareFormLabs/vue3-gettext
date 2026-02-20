@@ -29,7 +29,7 @@ jobs:
       # don't trigger additional workflows.
       - name: Checkout
         if: steps.rp.outputs.release_created == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
         if: steps.rp.outputs.release_created == 'true'
