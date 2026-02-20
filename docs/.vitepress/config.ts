@@ -28,6 +28,6 @@ export default defineConfig({
       },
     ],
 
-    socialLinks: [{ icon: "github", link: "https://github.com/jshmrtn/vue3-gettext/" }],
+    socialLinks: [{ icon: "github", link: "https://github.com/RareFormLabs/vue3-gettext/" }],
   },
 });
