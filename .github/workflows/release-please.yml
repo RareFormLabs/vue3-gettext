@@ -15,8 +15,56 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: googleapis/release-please-action@v4
+      - name: Release Please
+        id: rp
+        uses: googleapis/release-please-action@v4
         with:
           release-type: node
           package-name: "@rareformlabs/vue3-gettext"
+
+      # If a release was just created, publish to npm from the same workflow run.
+      # This avoids GitHub's limitation where events created by GITHUB_TOKEN (e.g. release creation)
+      # don't trigger additional workflows.
+      - name: Checkout
+        if: steps.rp.outputs.release_created == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        if: steps.rp.outputs.release_created == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+
+      - name: Install system deps
+        if: steps.rp.outputs.release_created == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext
+
+      - name: Install deps
+        if: steps.rp.outputs.release_created == 'true'
+        run: npm ci
+
+      - name: Test
+        if: steps.rp.outputs.release_created == 'true'
+        run: npm test
+
+      - name: Build
+        if: steps.rp.outputs.release_created == 'true'
+        run: npm run build
+
+      - name: Publish (prerelease -> next)
+        if: steps.rp.outputs.release_created == 'true' && contains(steps.rp.outputs.tag_name, '-')
+        run: npm publish --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish (release -> latest)
+        if: steps.rp.outputs.release_created == 'true' && !contains(steps.rp.outputs.tag_name, '-')
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
