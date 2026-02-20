@@ -3,6 +3,16 @@ name: release
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref (tag/sha/branch) to publish"
+        required: true
+        default: "master"
+      dist_tag:
+        description: "npm dist-tag (next or latest). Leave blank to infer from tag (hyphen => next)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -13,12 +23,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: 20.20.0
+          node-version: 20
           registry-url: "https://registry.npmjs.org"
           cache: npm
 
@@ -36,14 +48,24 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Publish (prerelease -> next)
-        if: github.event.release.prerelease == true
-        run: npm publish --tag next
+      - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
 
-      - name: Publish (release -> latest)
-        if: github.event.release.prerelease != true
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # If manually triggered, allow an explicit dist-tag override.
+          if [ -n "${{ github.event.inputs.dist_tag }}" ]; then
+            echo "Publishing with explicit dist-tag: ${{ github.event.inputs.dist_tag }}"
+            npm publish --tag "${{ github.event.inputs.dist_tag }}"
+            exit 0
+          fi
+
+          # Auto-infer: prerelease releases => next, otherwise latest.
+          if [ "${{ github.event.release.prerelease || false }}" = "true" ]; then
+            echo "Publishing prerelease to dist-tag: next"
+            npm publish --tag next
+          else
+            echo "Publishing release to dist-tag: latest"
+            npm publish
+          fi
