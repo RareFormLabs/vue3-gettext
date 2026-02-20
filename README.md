@@ -51,6 +51,8 @@ console.log($gettext("Hello World!"));
 
 ## Contribute
 
+> Note: We're publishing a stable 4.1.1 next (dropping the beta suffix).
+
 Please make sure your code is properly formatted (the project contains a `prettier` config) and all the tests run successfully (`npm run test`) when opening a pull request.
 
 Please specify clearly what you changed and why.
