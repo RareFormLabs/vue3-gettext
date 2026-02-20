@@ -3,8 +3,7 @@
   "release-type": "node",
   "packages": {
     ".": {
-      "package-name": "@rareformlabs/vue3-gettext",
-      "release-as": "4.1.1"
+      "package-name": "@rareformlabs/vue3-gettext"
     }
   }
 }
