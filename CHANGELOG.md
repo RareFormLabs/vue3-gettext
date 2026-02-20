@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.1](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.1.1...vue3-gettext-v4.1.1) (2026-02-20)
+
+
+### Bug Fixes
+
+* publish stable releases to npm latest ([#40](https://github.com/RareFormLabs/vue3-gettext/issues/40)) ([ecdcbee](https://github.com/RareFormLabs/vue3-gettext/commit/ecdcbee8dded8c3090ca33999d9118c21f1ddced))
+
 ## [4.1.1](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.1.1-beta.1...vue3-gettext-v4.1.1) (2026-02-20)
 
 
