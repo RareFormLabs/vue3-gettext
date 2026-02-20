@@ -21,21 +21,21 @@ jobs:
         id: rp
         uses: googleapis/release-please-action@v4
         with:
-          release-type: node
-          package-name: "@rareformlabs/vue3-gettext"
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
       # If a release was just created, publish to npm from the same workflow run.
       # This avoids GitHub's limitation where events created by GITHUB_TOKEN (e.g. release creation)
       # don't trigger additional workflows.
       - name: Checkout
         if: steps.rp.outputs.release_created == 'true'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Node
         if: steps.rp.outputs.release_created == 'true'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: 20.20.0
+          node-version: 20
           registry-url: "https://registry.npmjs.org"
           cache: npm
 
