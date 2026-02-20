@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.1-beta.1](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.1.0-beta.1...vue3-gettext-v4.1.1-beta.1) (2026-02-20)
+
+
+### Bug Fixes
+
+* restore vue peer deps + point docs GitHub link to fork ([#32](https://github.com/RareFormLabs/vue3-gettext/issues/32)) ([c07f679](https://github.com/RareFormLabs/vue3-gettext/commit/c07f679082a442f9b73e0afaaabab15437724710))
+
 ## [4.1.0-beta.1](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.0.1-beta.1...vue3-gettext-v4.1.0-beta.1) (2026-02-20)
 
 
