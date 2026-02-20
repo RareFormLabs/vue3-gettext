@@ -29,7 +29,7 @@ jobs:
       # don't trigger additional workflows.
       - name: Checkout
         if: steps.rp.outputs.release_created == 'true'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Node
         if: steps.rp.outputs.release_created == 'true'
@@ -57,14 +57,25 @@ jobs:
         if: steps.rp.outputs.release_created == 'true'
         run: npm run build
 
-      - name: Publish (prerelease -> next)
-        if: steps.rp.outputs.release_created == 'true' && contains(steps.rp.outputs.tag_name, '-')
-        run: npm publish --tag next
+      - name: Publish
+        if: steps.rp.outputs.release_created == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
 
-      - name: Publish (release -> latest)
-        if: steps.rp.outputs.release_created == 'true' && !contains(steps.rp.outputs.tag_name, '-')
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TAG_NAME="${{ steps.rp.outputs.tag_name }}"
+
+          # Extract version from a tag like:
+          #   vue3-gettext-v4.1.1
+          #   vue3-gettext-v4.1.1-beta.1
+          VERSION="${TAG_NAME##*v}"
+
+          # If VERSION contains a prerelease suffix (hyphen), publish to `next`.
+          if [[ "$VERSION" == *-* ]]; then
+            echo "Publishing prerelease $VERSION to dist-tag: next"
+            npm publish --tag next
+          else
+            echo "Publishing release $VERSION to dist-tag: latest"
+            npm publish
+          fi
