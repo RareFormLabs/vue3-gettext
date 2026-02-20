@@ -1,0 +1,29 @@
+name: npm dist-tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Package version to tag (e.g. 4.1.1)"
+        required: true
+      tag:
+        description: "Dist-tag to set (e.g. latest, next)"
+        required: true
+
+jobs:
+  dist-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Set dist-tag
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          npm dist-tag add "@rareformlabs/vue3-gettext@${{ inputs.version }}" "${{ inputs.tag }}"
+          npm dist-tag ls @rareformlabs/vue3-gettext
