@@ -9,6 +9,12 @@
     {
       "matchUpdateTypes": ["patch"],
       "automerge": true
+    },
+    {
+      "description": "Do not modify Vue peer dependency ranges (library compatibility).",
+      "matchDepTypes": ["peerDependencies"],
+      "matchPackageNames": ["vue", "@vue/compiler-sfc"],
+      "enabled": false
     }
   ]
 }
