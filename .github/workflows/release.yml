@@ -2,42 +2,48 @@ name: release
 
 on:
   release:
-    types: [created]
+    types: [published]
+
+permissions:
+  contents: read
 
 jobs:
-  test:
-    name: "test"
+  publish:
     runs-on: ubuntu-latest
 
     steps:
-      - name: check out repo
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: prepare release information
-        id: release
-        uses: manovotny/github-releases-for-automated-package-publishing-action@v2.0.1
-
-      - name: setup node
-        id: setup-node
-        uses: actions/setup-node@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          always-auth: true
           node-version: 20
           registry-url: "https://registry.npmjs.org"
-      - name: install dependencies
+          cache: npm
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext
+
+      - name: Install deps
         run: npm ci
-      - name: run tests
-        run: npm run test
-      - name: build package
+
+      - name: Test
+        run: npm test
+
+      - name: Build
         run: npm run build
 
-      - name: publish version
-        if: steps.release.outputs.tag == ''
-        run: npm publish
+      - name: Publish (prerelease -> next)
+        if: github.event.release.prerelease == true
+        run: npm publish --tag next
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: publish tagged version
-        if: steps.release.outputs.tag != ''
-        run: npm publish --tag ${{ steps.release.outputs.tag }}
+
+      - name: Publish (release -> latest)
+        if: github.event.release.prerelease != true
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
