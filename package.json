@@ -74,7 +74,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.8.0",
     "globals": "^16.0.0",
-    "vue-eslint-parser": "^10.3.0",
+    "vue-eslint-parser": "^10.4.0",
     "happy-dom": "^20.7.0",
     "prettier": "^3.8.1",
     "tsup": "^8.5.1",
