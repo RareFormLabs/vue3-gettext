@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.1.2](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.1.1...vue3-gettext-v4.1.2) (2026-03-12)
+
+
+### Bug Fixes
+
+* **deps:** update dependency glob to v13 ([#46](https://github.com/RareFormLabs/vue3-gettext/issues/46)) ([b33e0f9](https://github.com/RareFormLabs/vue3-gettext/commit/b33e0f960ff3c63497cfb15045bf3daa2e8f295f))
+* publish stable releases to npm latest ([#40](https://github.com/RareFormLabs/vue3-gettext/issues/40)) ([ecdcbee](https://github.com/RareFormLabs/vue3-gettext/commit/ecdcbee8dded8c3090ca33999d9118c21f1ddced))
+
 ## [4.1.1](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.1.1...vue3-gettext-v4.1.1) (2026-02-20)
 
 
