@@ -10,6 +10,9 @@ export async function extractAndCreatePOT(filePaths: string[], potPath: string, 
 
   await Promise.all(
     filePaths.map(async (fp) => {
+      if (!fs.statSync(fp).isFile()) {
+        return;
+      }
       const buffer: string = await new Promise((res, rej) =>
         fs.readFile(fp, "utf-8", (err, data) => {
           if (err) {
