@@ -27,14 +27,14 @@ const getFiles = async (config: GettextConfig) => {
     config.input?.include.map((pattern) => {
       const searchPath = path.join(config.input.path, pattern).replace(/\\/g, "/");
       console.info(`Searching: ${chalk.blueBright(searchPath)}`);
-      return glob(searchPath);
+      return glob(searchPath, { nodir: true });
     }),
   );
   const excludeFiles = await Promise.all(
     config.input.exclude.map((pattern) => {
       const searchPath = path.join(config.input.path, pattern);
       console.info(`Excluding: ${chalk.blueBright(searchPath)}`);
-      return glob(searchPath);
+      return glob(searchPath, { nodir: true });
     }),
   );
   const filesFlat = allFiles.reduce((prev, curr) => [...prev, ...curr], [] as string[]);
