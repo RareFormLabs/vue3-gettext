@@ -107,7 +107,7 @@ const getFiles = async (config: GettextConfig) => {
             item.msgstr[0] = item.msgid;
             if (item.msgid_plural) {
               // Fill all plural forms with the plural ID
-              const nplurals = parseInt(po.headers["Plural-Forms"]?.match(/nplurals=(\d+)/)?.[1] || "2");
+              const nplurals = parseInt(po.headers["Plural-Forms"]?.match(/nplurals\s*=\s*(\d+)/)?.[1] || "2");
               for (let i = 1; i < nplurals; i++) {
                 item.msgstr[i] = item.msgid_plural;
               }

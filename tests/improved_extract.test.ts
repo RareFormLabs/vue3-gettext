@@ -118,4 +118,46 @@ describe("Improved Extractor Options Tests", () => {
       expect(frPo).toContain('msgid "Hello"\nmsgstr ""');
     });
   });
+
+  it("should parse Plural-Forms header with spaces correctly", async () => {
+    await withTempDir(async (tmpDir) => {
+      for (const d of ["src", "scripts", "node_modules"]) {
+        await symlink(join(cwd(), d), join(tmpDir, d));
+      }
+      await writeFile(join(tmpDir, "package.json"), JSON.stringify({ name: "test", type: "module" }));
+      await writeFile(
+        join(tmpDir, "gettext.config.js"),
+        `export default { 
+          input: { path: './srctest', include: ['*.js'] }, 
+          output: { path: './srctest/lang', locales: ['en'], autoFill: ['en'], flat: true } 
+        };`,
+      );
+
+      await mkdir(join(tmpDir, "srctest", "lang"), { recursive: true });
+      await writeFile(join(tmpDir, "srctest", "test.js"), `$ngettext('One', 'Many', 2)`);
+
+      const poPath = join(tmpDir, "srctest", "lang", "en.po");
+      await writeFile(
+        poPath,
+        `msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Plural-Forms: nplurals = 3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\\n"
+
+msgid "One"
+msgid_plural "Many"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+`,
+      );
+
+      execSync(`sh -c 'cd ${tmpDir}; npx tsx ./scripts/gettext_extract.ts'`);
+
+      const poContent = (await readFile(poPath)).toString();
+      expect(poContent).toContain('msgstr[0] "One"');
+      expect(poContent).toContain('msgstr[1] "Many"');
+      expect(poContent).toContain('msgstr[2] "Many"');
+    });
+  });
 });
