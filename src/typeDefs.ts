@@ -126,7 +126,7 @@ export interface GettextConfig {
     fuzzyMatching: boolean;
     locations: boolean;
     addLocation?: "full" | "file" | "never";
-    autoFill?: boolean;
+    autoFill?: boolean | string[];
   };
 }
 

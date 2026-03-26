@@ -73,19 +73,22 @@ export default {
     addLocation: "file",
     /**
      * If true, empty msgstr entries in PO files will be filled with the msgid.
+     * Can also be an array of locales to auto-fill (e.g. ["en"]).
      * Useful for mechanical default locales (e.g. English).
      */
-    autoFill: true,
+    autoFill: ["en"],
   },
 };
 ```
 
 Run extraction:
+
 ```bash
 npx vue-gettext-extract
 ```
 
 Run compilation:
+
 ```bash
 npx vue-gettext-compile
 ```

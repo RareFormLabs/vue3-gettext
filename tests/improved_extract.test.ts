@@ -80,7 +80,7 @@ describe("Improved Extractor Options Tests", () => {
         join(tmpDir, "gettext.config.js"),
         `export default { 
           input: { path: './srctest', include: ['*.js'] }, 
-          output: { path: './srctest/lang', locales: ['en'], autoFill: true } 
+          output: { path: './srctest/lang', locales: ['en'], autoFill: ['en'] } 
         };`,
       );
 
@@ -92,6 +92,30 @@ describe("Improved Extractor Options Tests", () => {
       // Check en.po (flat: true default means path/en.po)
       const poContent = (await readFile(join(tmpDir, "srctest", "lang", "en.po"))).toString();
       expect(poContent).toContain('msgid "Auto me"\nmsgstr "Auto me"');
+    });
+  });
+
+  it("should not auto-fill if locale is not in autoFill array", async () => {
+    await withTempDir(async (tmpDir) => {
+      for (const d of ["src", "scripts", "node_modules"]) {
+        await symlink(join(cwd(), d), join(tmpDir, d));
+      }
+      await writeFile(join(tmpDir, "package.json"), JSON.stringify({ name: "test", type: "module" }));
+      await writeFile(
+        join(tmpDir, "gettext.config.js"),
+        `export default { 
+          input: { path: './srctest', include: ['*.js'] }, 
+          output: { path: './srctest/lang', locales: ['en', 'fr'], autoFill: ['en'] } 
+        };`,
+      );
+
+      await mkdir(join(tmpDir, "srctest", "lang"), { recursive: true });
+      await writeFile(join(tmpDir, "srctest", "test.js"), `$gettext('Hello')`);
+
+      execSync(`sh -c 'cd ${tmpDir}; npx tsx ./scripts/gettext_extract.ts'`);
+
+      const frPo = (await readFile(join(tmpDir, "srctest", "lang", "fr.po"))).toString();
+      expect(frPo).toContain('msgid "Hello"\nmsgstr ""');
     });
   });
 });

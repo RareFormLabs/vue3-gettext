@@ -94,14 +94,23 @@ const getFiles = async (config: GettextConfig) => {
     if (existsSync(poFile)) {
       await execShellCommand(`msgattrib --no-wrap --no-obsolete ${noLocation} -o ${poFile} ${poFile}`);
 
-      if (config.output.autoFill) {
+      const shouldAutoFill =
+        config.output.autoFill === true ||
+        (Array.isArray(config.output.autoFill) && config.output.autoFill.includes(loc));
+
+      if (shouldAutoFill) {
         const po = PO.parse(readFileSync(poFile, "utf-8"));
         let changed = false;
         po.items.forEach((item) => {
-          if (!item.msgstr[0] || item.msgstr[0].length === 0) {
+          // If the message is completely untranslated
+          if (item.msgstr.every((s) => !s || s.length === 0)) {
             item.msgstr[0] = item.msgid;
             if (item.msgid_plural) {
-              item.msgstr[1] = item.msgid_plural;
+              // Fill all plural forms with the plural ID
+              const nplurals = parseInt(po.headers["Plural-Forms"]?.match(/nplurals=(\d+)/)?.[1] || "2");
+              for (let i = 1; i < nplurals; i++) {
+                item.msgstr[i] = item.msgid_plural;
+              }
             }
             changed = true;
           }
