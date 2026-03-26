@@ -37,14 +37,18 @@ export async function extractAndCreatePOT(filePaths: string[], potPath: string, 
   // sorting makes order more deterministic and prevents unnecessary source diffs
   fileMsgMap.sort((a, b) => a.path.localeCompare(b.path));
   fileMsgMap.forEach((m) => {
-    const po = makePO(m.path, m.msgs);
+    const po = makePO(m.path, m.msgs, config.output?.addLocation);
     for (const i of po.items) {
       const prevItem = pot.items.find(
         (pi) => pi.msgid === i.msgid && pi.msgid_plural === i.msgid_plural && pi.msgctxt === i.msgctxt,
       );
 
       if (prevItem) {
-        prevItem.references.push(...i.references);
+        i.references.forEach((ref) => {
+          if (!prevItem.references.includes(ref)) {
+            prevItem.references.push(ref);
+          }
+        });
       } else {
         pot.items.push(i);
       }

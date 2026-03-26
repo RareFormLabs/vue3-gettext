@@ -18,6 +18,8 @@ const config = {
     locales: ["en_GB", "fr_FR", "zh_CN"],
     splitJson: false,
     locations: true,
+    addLocation: "full",
+    autoFill: false,
   },
 };
 

@@ -125,6 +125,8 @@ export interface GettextConfig {
     splitJson: boolean;
     fuzzyMatching: boolean;
     locations: boolean;
+    addLocation?: "full" | "file" | "never";
+    autoFill?: boolean | string[];
   };
 }
 
