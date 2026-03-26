@@ -143,11 +143,7 @@ export function parseSrc(src: string, options?: { mapping?: KeywordMapping; over
 }
 
 /** Careful: API is not stable */
-export function makePO(
-  fileName: string,
-  msgs: MsgInfo[],
-  addLocation: "full" | "file" | "never" = "full",
-): PO {
+export function makePO(fileName: string, msgs: MsgInfo[], addLocation: "full" | "file" | "never" = "full"): PO {
   const po = new PO();
 
   for (const msg of msgs) {
