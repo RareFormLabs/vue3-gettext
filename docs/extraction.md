@@ -66,10 +66,35 @@ const config = {
     splitJson: false, // create separate json files for each locale. If used, jsonPath must end with a directory, not a file
     fuzzyMatching: true, // set if fuzzy matching should be enabled when merging the pot file into the po files
     locations: true, // output location paths
+    /**
+     * "full": file and line number (default)
+     * "file": filename only (reduces merge conflicts)
+     * "never": no location comments
+     */
+    addLocation: "full",
+    /**
+     * If enabled, empty msgstr entries will be filled with the msgid.
+     * Can be a boolean or an array of locales (e.g. ["en"]).
+     */
+    autoFill: false,
   },
 };
 export default config;
 ```
+
+## Advanced Extraction Options
+
+### Reducing Merge Conflicts
+
+By default, the extractor includes line numbers in the PO file comments (`#: file.js:123`). This often causes noisy merge conflicts when lines shift.
+
+To reduce this, set `addLocation: 'file'` to only include filenames, or `'never'` to remove location comments entirely.
+
+### Mechanical Default Locales (Auto-fill)
+
+For your primary language (e.g., English), it can be tedious to manually copy `msgid` to `msgstr`.
+
+Set `autoFill: ["en"]` to automatically populate empty translations in `en.po` with the source string. This allows you to treat the PO file for your default locale as a generated artifact.
 
 ## Gotchas
 

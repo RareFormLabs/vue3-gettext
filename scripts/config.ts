@@ -46,6 +46,8 @@ export const loadConfig = async (cliArgs?: { config?: string }): Promise<Gettext
       splitJson: config.output?.splitJson === undefined ? false : config.output.splitJson,
       fuzzyMatching: config.output?.fuzzyMatching === undefined ? true : config.output.fuzzyMatching,
       locations: config.output?.locations === undefined ? true : config.output.locations,
+      addLocation: config.output?.addLocation,
+      autoFill: config.output?.autoFill,
     },
   };
 };

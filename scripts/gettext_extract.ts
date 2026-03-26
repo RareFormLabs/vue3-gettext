@@ -6,10 +6,11 @@ import fs from "node:fs";
 import { glob } from "glob";
 import path from "node:path";
 import { GettextConfig } from "../src/typeDefs.js";
-import { chmodSync, existsSync, lstatSync, mkdirSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { loadConfig } from "./config.js";
 import { extractAndCreatePOT } from "./extract.js";
 import { execShellCommand } from "./utils.js";
+import PO from "pofile";
 
 const optionDefinitions: OptionDefinition[] = [{ name: "config", alias: "c", type: String }];
 let options;
@@ -66,7 +67,7 @@ const getFiles = async (config: GettextConfig) => {
   for (const loc of config.output.locales) {
     const poDir = config.output.flat ? config.output.path : path.join(config.output.path, loc);
     const poFile = config.output.flat ? path.join(poDir, `${loc}.po`) : path.join(poDir, `app.po`);
-    const noLocation = config.output.locations ? "" : "--no-location";
+    let noLocation = config.output.locations === false || config.output.addLocation === "never" ? "--no-location" : "";
     const noFuzzyMatching = config.output.fuzzyMatching ? "" : "--no-fuzzy-matching";
 
     mkdirSync(poDir, { recursive: true });
@@ -86,8 +87,41 @@ const getFiles = async (config: GettextConfig) => {
         `msginit --no-translator --locale=${loc} --input=${config.output.potPath} --output-file=${poFile}`,
       );
       chmodSync(poFile, 0o666);
-      await execShellCommand(`msgattrib --no-wrap --no-obsolete ${noLocation} -o ${poFile} ${poFile}`);
       console.info(`${chalk.green("Created")}: ${chalk.blueBright(poFile)}`);
+    }
+
+    // Post-process the PO file for formatting and auto-filling
+    if (existsSync(poFile)) {
+      await execShellCommand(`msgattrib --no-wrap --no-obsolete ${noLocation} -o ${poFile} ${poFile}`);
+
+      const shouldAutoFill =
+        config.output.autoFill === true ||
+        (Array.isArray(config.output.autoFill) && config.output.autoFill.includes(loc));
+
+      if (shouldAutoFill) {
+        const po = PO.parse(readFileSync(poFile, "utf-8"));
+        let changed = false;
+        po.items.forEach((item) => {
+          // If the message is completely untranslated
+          if (item.msgstr.every((s) => !s || s.length === 0)) {
+            item.msgstr[0] = item.msgid;
+            if (item.msgid_plural) {
+              // Fill all plural forms with the plural ID
+              const nplurals = parseInt(po.headers["Plural-Forms"]?.match(/nplurals\s*=\s*(\d+)/)?.[1] || "2");
+              for (let i = 1; i < nplurals; i++) {
+                item.msgstr[i] = item.msgid_plural;
+              }
+            }
+            changed = true;
+          }
+        });
+        if (changed) {
+          writeFileSync(poFile, po.toString());
+          // Run msgattrib again to ensure consistent formatting after pofile serialization
+          await execShellCommand(`msgattrib --no-wrap ${noLocation} -o ${poFile} ${poFile}`);
+          console.info(`${chalk.green("Auto-filled")}: ${chalk.blueBright(poFile)}`);
+        }
+      }
     }
   }
   if (config.output.linguas === true) {

@@ -49,6 +49,50 @@ console.log($gettext("Hello World!"));
 - CLI to automatically extract messages from code files
 - support for pluralization and message contexts
 
+## Extraction & Configuration
+
+This fork includes improved extraction tools with configurable location comments and auto-filling support.
+
+Create a `gettext.config.js` in your project root:
+
+```js
+export default {
+  input: {
+    path: "./src",
+    include: ["**/*.js", "**/*.ts", "**/*.vue"],
+    exclude: [],
+  },
+  output: {
+    path: "./src/language",
+    locales: ["en", "es"],
+    /**
+     * "full": file and line number (default)
+     * "file": filename only (reduces merge conflicts)
+     * "never": no location comments
+     */
+    addLocation: "file",
+    /**
+     * If true, empty msgstr entries in PO files will be filled with the msgid.
+     * Can also be an array of locales to auto-fill (e.g. ["en"]).
+     * Useful for mechanical default locales (e.g. English).
+     */
+    autoFill: ["en"],
+  },
+};
+```
+
+Run extraction:
+
+```bash
+npx vue-gettext-extract
+```
+
+Run compilation:
+
+```bash
+npx vue-gettext-compile
+```
+
 ## Contribute
 
 > Note: We're publishing a stable 4.1.1 next (dropping the beta suffix).
