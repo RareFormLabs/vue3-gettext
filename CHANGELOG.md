@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.2.0](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.1.2...vue3-gettext-v4.2.0) (2026-03-26)
+
+
+### Features
+
+* improve extractor stability and merge conflict behavior ([#76](https://github.com/RareFormLabs/vue3-gettext/issues/76)) ([d9bce17](https://github.com/RareFormLabs/vue3-gettext/commit/d9bce17dc0ed0c098e5217830d45d9f0c3691139))
+
+
+### Bug Fixes
+
+* **deps:** update dependency command-line-args to ^6.0.2 ([#75](https://github.com/RareFormLabs/vue3-gettext/issues/75)) ([f7726f1](https://github.com/RareFormLabs/vue3-gettext/commit/f7726f1b458cc3deedbbd8604b16d143b2083d3b))
+
 ## [4.1.2](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.1.1...vue3-gettext-v4.1.2) (2026-03-23)
 
 
