@@ -143,7 +143,11 @@ export function parseSrc(src: string, options?: { mapping?: KeywordMapping; over
 }
 
 /** Careful: API is not stable */
-export function makePO(fileName: string, msgs: MsgInfo[]): PO {
+export function makePO(
+  fileName: string,
+  msgs: MsgInfo[],
+  addLocation: "full" | "file" | "never" = "full",
+): PO {
   const po = new PO();
 
   for (const msg of msgs) {
@@ -151,7 +155,11 @@ export function makePO(fileName: string, msgs: MsgInfo[]): PO {
     item.msgid = msg.message;
     item.msgid_plural = msg.messagePlural;
     item.msgctxt = msg.context;
-    item.references = [`${fileName}:${msg.lineNumber}`];
+    if (addLocation === "full") {
+      item.references = [`${fileName}:${msg.lineNumber}`];
+    } else if (addLocation === "file") {
+      item.references = [fileName];
+    }
     po.items.push(item);
   }
 
