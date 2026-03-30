@@ -134,7 +134,14 @@ export interface GettextConfig {
     locales?: string[];
     includeTranslated: boolean;
     openai?: {
+      authMode?: "api-key" | "oauth";
       apiKeyEnvVar?: string;
+      credentialsPath?: string;
+      accessTokenEnvVar?: string;
+      refreshTokenEnvVar?: string;
+      accountIdEnvVar?: string;
+      persistRefresh?: boolean;
+      originator?: string;
       baseUrl?: string;
       model?: string;
       organization?: string;

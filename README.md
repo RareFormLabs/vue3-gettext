@@ -87,11 +87,64 @@ export default {
     // default false: only fill untranslated entries
     includeTranslated: false,
     openai: {
+      /**
+       * Default: "api-key"
+       * - "api-key" uses https://api.openai.com/v1/chat/completions
+       * - "oauth" uses ChatGPT/Codex OAuth via @mariozechner/pi-ai and https://chatgpt.com/backend-api/codex/responses
+       */
+      authMode: "api-key",
       // optional override, defaults to OPENAI_API_KEY
       apiKeyEnvVar: "OPENAI_API_KEY",
     },
   },
 };
+```
+
+OAuth mode example:
+
+```js
+export default {
+  translate: {
+    provider: "openai",
+    model: "gpt-5.4",
+    includeTranslated: false,
+    openai: {
+      authMode: "oauth",
+      // defaults to ~/.vue-gettext/openai-codex-oauth.json
+      credentialsPath: "./.gettext/openai-codex-oauth.json",
+      // optional env overrides if you do not want a file
+      accessTokenEnvVar: "OPENAI_OAUTH_ACCESS_TOKEN",
+      refreshTokenEnvVar: "OPENAI_OAUTH_REFRESH_TOKEN",
+      accountIdEnvVar: "OPENAI_OAUTH_ACCOUNT_ID",
+      // default true: persist refreshed tokens back to credentialsPath
+      persistRefresh: true,
+    },
+  },
+};
+```
+
+Credential file formats accepted in OAuth mode:
+
+```json
+{
+  "access": "<token>",
+  "refresh": "<token>",
+  "expires": 1760000000000,
+  "accountId": "user-123"
+}
+```
+
+or:
+
+```json
+{
+  "openai-codex": {
+    "access": "<token>",
+    "refresh": "<token>",
+    "expires": 1760000000000,
+    "accountId": "user-123"
+  }
+}
 ```
 
 Run extraction:
@@ -100,11 +153,22 @@ Run extraction:
 npx vue-gettext-extract
 ```
 
-Run AI translation for missing entries:
+Run AI translation for missing entries with API key auth:
 
 ```bash
 OPENAI_API_KEY=your-key npx vue-gettext-translate
 ```
+
+Run AI translation with OAuth auth:
+
+```bash
+OPENAI_OAUTH_ACCESS_TOKEN=... \
+OPENAI_OAUTH_REFRESH_TOKEN=... \
+OPENAI_OAUTH_ACCOUNT_ID=... \
+npx vue-gettext-translate
+```
+
+Or point `translate.openai.credentialsPath` at a saved OAuth JSON file.
 
 Run compilation:
 

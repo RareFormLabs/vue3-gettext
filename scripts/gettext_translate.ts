@@ -46,18 +46,37 @@ const resolveTranslator = (
     throw new Error(`Unsupported translation provider: ${provider}`);
   }
 
-  const apiKeyEnvVar = options.configTranslate?.openai?.apiKeyEnvVar || "OPENAI_API_KEY";
+  const openaiConfig = options.configTranslate?.openai;
+  const authMode = openaiConfig?.authMode || "api-key";
+  const model = options.model || options.configTranslate?.model || openaiConfig?.model || "gpt-4.1-mini";
+
+  if (authMode === "oauth") {
+    return new OpenAITranslator({
+      model,
+      authMode,
+      baseUrl: openaiConfig?.baseUrl,
+      credentialsPath: openaiConfig?.credentialsPath,
+      accessTokenEnvVar: openaiConfig?.accessTokenEnvVar,
+      refreshTokenEnvVar: openaiConfig?.refreshTokenEnvVar,
+      accountIdEnvVar: openaiConfig?.accountIdEnvVar,
+      persistRefresh: openaiConfig?.persistRefresh,
+      originator: openaiConfig?.originator,
+    });
+  }
+
+  const apiKeyEnvVar = openaiConfig?.apiKeyEnvVar || "OPENAI_API_KEY";
   const apiKey = process.env[apiKeyEnvVar];
   if (!apiKey) {
     throw new Error(`Missing OpenAI API key. Set ${apiKeyEnvVar} in your environment.`);
   }
 
   return new OpenAITranslator({
-    model: options.model || options.configTranslate?.model || options.configTranslate?.openai?.model || "gpt-4.1-mini",
+    model,
+    authMode,
     apiKey,
-    baseUrl: options.configTranslate?.openai?.baseUrl,
-    organization: options.configTranslate?.openai?.organization || process.env.OPENAI_ORG_ID,
-    project: options.configTranslate?.openai?.project || process.env.OPENAI_PROJECT_ID,
+    baseUrl: openaiConfig?.baseUrl,
+    organization: openaiConfig?.organization || process.env.OPENAI_ORG_ID,
+    project: openaiConfig?.project || process.env.OPENAI_PROJECT_ID,
   });
 };
 

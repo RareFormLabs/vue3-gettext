@@ -1,11 +1,20 @@
+import os from "node:os";
 import { TranslationEntry, TranslationResult, Translator, TranslatorRequest } from "./translate.js";
+import { resolveOpenAIOAuth } from "./openai-oauth.js";
 
 type OpenAITranslatorOptions = {
   model: string;
-  apiKey: string;
+  authMode?: "api-key" | "oauth";
+  apiKey?: string;
   baseUrl?: string;
   organization?: string;
   project?: string;
+  credentialsPath?: string;
+  accessTokenEnvVar?: string;
+  refreshTokenEnvVar?: string;
+  accountIdEnvVar?: string;
+  persistRefresh?: boolean;
+  originator?: string;
 };
 
 const translationResponseSchema = {
@@ -66,6 +75,58 @@ const buildUserPrompt = (request: TranslatorRequest) =>
     })),
   });
 
+const decodeContent = (value: unknown) => {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (typeof item === "string") {
+          return item;
+        }
+        if (item && typeof item === "object" && "type" in item && (item as { type?: string }).type === "output_text") {
+          return (item as { text?: string }).text || "";
+        }
+        return "";
+      })
+      .join("");
+  }
+  return "";
+};
+
+const extractAccountId = (token: string) => {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) {
+      throw new Error("Invalid token");
+    }
+    const decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as {
+      "https://api.openai.com/auth"?: { chatgpt_account_id?: string };
+    };
+    const accountId = decoded["https://api.openai.com/auth"]?.chatgpt_account_id;
+    if (!accountId) {
+      throw new Error("No account ID in token");
+    }
+    return accountId;
+  } catch {
+    throw new Error("Failed to extract accountId from token");
+  }
+};
+
+const createCodexHeaders = (token: string, accountId: string) => {
+  const userAgent = `vue3-gettext (${os.platform()} ${os.release()}; ${os.arch()})`;
+  return {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+    Accept: "text/event-stream",
+    "OpenAI-Beta": "responses=experimental",
+    "chatgpt-account-id": accountId,
+    originator: "pi",
+    "User-Agent": userAgent,
+  };
+};
+
 export class OpenAITranslator implements Translator {
   private readonly options: OpenAITranslatorOptions;
 
@@ -73,7 +134,7 @@ export class OpenAITranslator implements Translator {
     this.options = options;
   }
 
-  async translate(request: TranslatorRequest): Promise<TranslationResult[]> {
+  private async translateWithApiKey(request: TranslatorRequest): Promise<TranslationResult[]> {
     const response = await fetch(`${this.options.baseUrl || "https://api.openai.com/v1"}/chat/completions`, {
       method: "POST",
       headers: {
@@ -102,7 +163,54 @@ export class OpenAITranslator implements Translator {
     const data = (await response.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
-    const content = data.choices?.[0]?.message?.content;
+    return this.validateTranslations(request, data.choices?.[0]?.message?.content);
+  }
+
+  private async translateWithOAuth(request: TranslatorRequest): Promise<TranslationResult[]> {
+    const resolved = await resolveOpenAIOAuth({
+      credentialsPath: this.options.credentialsPath,
+      accessTokenEnvVar: this.options.accessTokenEnvVar,
+      refreshTokenEnvVar: this.options.refreshTokenEnvVar,
+      accountIdEnvVar: this.options.accountIdEnvVar,
+      persistRefresh: this.options.persistRefresh,
+      originator: this.options.originator,
+    });
+
+    const accountId = resolved.accountId || extractAccountId(resolved.accessToken);
+    const response = await fetch(`${this.options.baseUrl || "https://chatgpt.com/backend-api"}/codex/responses`, {
+      method: "POST",
+      headers: createCodexHeaders(resolved.accessToken, accountId),
+      body: JSON.stringify({
+        model: this.options.model,
+        store: false,
+        stream: false,
+        instructions: buildSystemPrompt(request.locale),
+        input: [
+          {
+            role: "user",
+            content: [{ type: "input_text", text: buildUserPrompt(request) }],
+          },
+        ],
+        text: { verbosity: "medium" },
+        response_format: {
+          type: "json_schema",
+          json_schema: translationResponseSchema,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI OAuth request failed (${response.status}): ${await response.text()}`);
+    }
+
+    const data = (await response.json()) as {
+      output?: Array<{ content?: unknown }>;
+    };
+    const content = decodeContent(data.output?.flatMap((item) => item.content || []) || []);
+    return this.validateTranslations(request, content);
+  }
+
+  private validateTranslations(request: TranslatorRequest, content: string | undefined) {
     if (!content) {
       throw new Error("OpenAI response did not include any content.");
     }
@@ -131,5 +239,12 @@ export class OpenAITranslator implements Translator {
       }
       return translation;
     });
+  }
+
+  async translate(request: TranslatorRequest): Promise<TranslationResult[]> {
+    if (this.options.authMode === "oauth") {
+      return this.translateWithOAuth(request);
+    }
+    return this.translateWithApiKey(request);
   }
 }
