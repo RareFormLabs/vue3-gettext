@@ -23,4 +23,9 @@ export default defineConfig([
     clean: true,
     format: ["esm"],
   },
+  {
+    entry: ["scripts/gettext_openai_login.ts"],
+    clean: true,
+    format: ["esm"],
+  },
 ]);

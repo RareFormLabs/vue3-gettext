@@ -50,9 +50,9 @@ console.log($gettext("Hello World!"));
 - AI-assisted PO translation for missing entries
 - support for pluralization and message contexts
 
-## Extraction & Configuration
+## Extraction, Translation & Configuration
 
-This fork includes improved extraction tools with configurable location comments and auto-filling support.
+This fork includes improved extraction tools with configurable location comments, auto-filling support, and optional AI-assisted translation.
 
 Create a `gettext.config.js` in your project root:
 
@@ -169,6 +169,12 @@ npx vue-gettext-translate
 ```
 
 Or point `translate.openai.credentialsPath` at a saved OAuth JSON file.
+
+Login helper for OAuth:
+
+```bash
+npx vue-gettext-openai-login
+```
 
 Run compilation:
 

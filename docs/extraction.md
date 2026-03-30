@@ -87,7 +87,13 @@ const config = {
     locales: undefined, // defaults to output.locales
     includeTranslated: false,
     openai: {
+      authMode: "api-key", // or "oauth"
       apiKeyEnvVar: "OPENAI_API_KEY",
+      credentialsPath: undefined, // oauth mode, defaults to ~/.vue-gettext/openai-codex-oauth.json
+      accessTokenEnvVar: "OPENAI_OAUTH_ACCESS_TOKEN",
+      refreshTokenEnvVar: "OPENAI_OAUTH_REFRESH_TOKEN",
+      accountIdEnvVar: "OPENAI_OAUTH_ACCOUNT_ID",
+      persistRefresh: true,
       baseUrl: undefined,
       model: undefined, // optional provider-specific override
       organization: undefined,
@@ -120,6 +126,13 @@ Keep extraction, translation, and compilation as separate steps:
 npm run gettext:extract
 OPENAI_API_KEY=your-key npm run gettext:translate
 npm run gettext:compile
+```
+
+OAuth workflow:
+
+```bash
+npx vue-gettext-openai-login
+npm run gettext:translate
 ```
 
 The translator reads your existing PO files, sends only untranslated entries by default, preserves `msgctxt` and `msgid_plural`, and writes the returned `msgstr` values back into the PO files.

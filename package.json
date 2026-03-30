@@ -30,7 +30,8 @@
   "bin": {
     "vue-gettext-compile": "./dist/gettext_compile.js",
     "vue-gettext-extract": "./dist/gettext_extract.js",
-    "vue-gettext-translate": "./dist/gettext_translate.js"
+    "vue-gettext-translate": "./dist/gettext_translate.js",
+    "vue-gettext-openai-login": "./dist/gettext_openai_login.js"
   },
   "scripts": {
     "docs:dev": "vitepress dev docs",
