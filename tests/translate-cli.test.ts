@@ -147,4 +147,34 @@ msgstr[0] ""
     expect(entries).toHaveLength(1);
     expect(entries[0].targetPluralCount).toBe(1);
   });
+
+  it("preserves existing plural forms in missing-only mode", () => {
+    const po = parsePo(`
+msgid ""
+msgstr ""
+"Language: ru\\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\\n"
+
+msgid "file"
+msgid_plural "files"
+msgstr[0] "файл"
+msgstr[1] ""
+msgstr[2] ""
+`);
+
+    const entries = collectTranslationEntries(po);
+    const changes = applyTranslations(
+      po,
+      [
+        {
+          key: entries[0].key,
+          msgstr: ["MODEL_SINGULAR", "файла", "файлов"],
+        },
+      ],
+      { includeTranslated: false },
+    );
+
+    expect(changes).toBe(1);
+    expect(po.items[0].msgstr).toEqual(["файл", "файла", "файлов"]);
+  });
 });

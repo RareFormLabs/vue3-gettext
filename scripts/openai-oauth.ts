@@ -26,19 +26,26 @@ const JWT_CLAIM_PATH = "https://api.openai.com/auth";
 const expandHome = (inputPath: string) =>
   inputPath.startsWith("~/") ? path.join(os.homedir(), inputPath.slice(2)) : inputPath;
 
-const decodeJwtAccountId = (token: string): string | undefined => {
+const decodeJwtPayload = (token: string): Record<string, unknown> | undefined => {
   try {
     const payload = token.split(".")[1];
     if (!payload) {
       return undefined;
     }
-    const decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as {
-      [JWT_CLAIM_PATH]?: { chatgpt_account_id?: string };
-    };
-    return decoded[JWT_CLAIM_PATH]?.chatgpt_account_id;
+    return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Record<string, unknown>;
   } catch {
     return undefined;
   }
+};
+
+const decodeJwtAccountId = (token: string): string | undefined => {
+  const decoded = decodeJwtPayload(token) as { [JWT_CLAIM_PATH]?: { chatgpt_account_id?: string } } | undefined;
+  return decoded?.[JWT_CLAIM_PATH]?.chatgpt_account_id;
+};
+
+const decodeJwtExpiry = (token: string): number | undefined => {
+  const decoded = decodeJwtPayload(token) as { exp?: number } | undefined;
+  return typeof decoded?.exp === "number" ? decoded.exp * 1000 : undefined;
 };
 
 const normalizeCredentials = (value: unknown): OAuthCredentials | undefined => {
@@ -90,7 +97,7 @@ const saveCredentialsToFile = async (
   credentials: OAuthCredentials,
   format: LoadedCredentials["format"] = "plain",
 ) => {
-  await fsPromises.mkdir(path.dirname(credentialsPath), { recursive: true });
+  await fsPromises.mkdir(path.dirname(credentialsPath), { recursive: true, mode: 0o700 });
 
   const content =
     format === "provider-map"
@@ -99,7 +106,10 @@ const saveCredentialsToFile = async (
         ? { provider: PROVIDER_ID, credentials }
         : credentials;
 
-  await fsPromises.writeFile(credentialsPath, `${JSON.stringify(content, null, 2)}\n`, "utf8");
+  await fsPromises.writeFile(credentialsPath, `${JSON.stringify(content, null, 2)}\n`, {
+    encoding: "utf8",
+    mode: 0o600,
+  });
 };
 
 export type ResolvedOpenAIOAuth = {
@@ -123,7 +133,8 @@ export const resolveOpenAIOAuth = async (config: OpenAIOAuthConfig = {}): Promis
     process.env[accountIdEnvVar] || (envAccessToken ? decodeJwtAccountId(envAccessToken) : undefined);
 
   if (envAccessToken && envRefreshToken) {
-    const expires = Number.parseInt(process.env.OPENAI_OAUTH_EXPIRES_AT || "0", 10) || Date.now() + 55 * 60 * 1000;
+    const expires =
+      Number.parseInt(process.env.OPENAI_OAUTH_EXPIRES_AT || "0", 10) || decodeJwtExpiry(envAccessToken) || 0;
     const loaded: LoadedCredentials = {
       source: "env",
       credentials: {

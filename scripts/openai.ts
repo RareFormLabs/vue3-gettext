@@ -227,7 +227,12 @@ export class OpenAITranslator implements Translator {
       );
     }
 
+    const seenKeys = new Set<string>();
     return parsed.translations.map((translation) => {
+      if (seenKeys.has(translation.key)) {
+        throw new Error(`OpenAI returned a duplicate translation key: ${translation.key}`);
+      }
+      seenKeys.add(translation.key);
       const entry = entryMap.get(translation.key);
       if (!entry) {
         throw new Error(`OpenAI returned an unknown translation key: ${translation.key}`);

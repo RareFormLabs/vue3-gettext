@@ -20,6 +20,10 @@ export type TranslationResult = {
   msgstr: string[];
 };
 
+export type ApplyTranslationsOptions = {
+  includeTranslated?: boolean;
+};
+
 export type TranslatorRequest = {
   locale: string;
   entries: TranslationEntry[];
@@ -83,7 +87,11 @@ export const collectTranslationEntries = (po: PO, includeTranslated = false): Tr
     }));
 };
 
-export const applyTranslations = (po: PO, translations: TranslationResult[]) => {
+export const applyTranslations = (
+  po: PO,
+  translations: TranslationResult[],
+  options: ApplyTranslationsOptions = {},
+) => {
   const translationMap = new Map(translations.map((translation) => [translation.key, translation.msgstr]));
   let changed = 0;
 
@@ -93,7 +101,17 @@ export const applyTranslations = (po: PO, translations: TranslationResult[]) => 
       continue;
     }
 
-    const nextMsgstr = item.msgid_plural ? [...translated] : [translated[0] || ""];
+    const nextMsgstr = item.msgid_plural
+      ? translated.map((value, index) => {
+          if (!options.includeTranslated) {
+            const existing = item.msgstr[index];
+            if (existing && existing.trim().length > 0) {
+              return existing;
+            }
+          }
+          return value || "";
+        })
+      : [options.includeTranslated ? translated[0] || "" : item.msgstr[0] || translated[0] || ""];
     if (JSON.stringify(item.msgstr) === JSON.stringify(nextMsgstr)) {
       continue;
     }
