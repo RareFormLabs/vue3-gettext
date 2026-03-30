@@ -99,12 +99,22 @@ const saveCredentialsToFile = async (
 ) => {
   await fsPromises.mkdir(path.dirname(credentialsPath), { recursive: true, mode: 0o700 });
 
-  const content =
-    format === "provider-map"
-      ? { [PROVIDER_ID]: credentials }
-      : format === "credentials-wrapper"
-        ? { provider: PROVIDER_ID, credentials }
-        : credentials;
+  let content: Record<string, unknown> | OAuthCredentials;
+  if (format === "provider-map") {
+    let existing: Record<string, unknown> = {};
+    try {
+      existing = JSON.parse(await fsPromises.readFile(credentialsPath, "utf8")) as Record<string, unknown>;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
+    }
+    content = { ...existing, [PROVIDER_ID]: credentials };
+  } else if (format === "credentials-wrapper") {
+    content = { provider: PROVIDER_ID, credentials };
+  } else {
+    content = credentials;
+  }
 
   await fsPromises.writeFile(credentialsPath, `${JSON.stringify(content, null, 2)}\n`, {
     encoding: "utf8",
