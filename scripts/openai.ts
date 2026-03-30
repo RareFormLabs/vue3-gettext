@@ -114,7 +114,7 @@ const extractAccountId = (token: string) => {
   }
 };
 
-const createCodexHeaders = (token: string, accountId: string) => {
+const createCodexHeaders = (token: string, accountId: string, originator = "pi") => {
   const userAgent = `vue3-gettext (${os.platform()} ${os.release()}; ${os.arch()})`;
   return {
     Authorization: `Bearer ${token}`,
@@ -122,7 +122,7 @@ const createCodexHeaders = (token: string, accountId: string) => {
     Accept: "text/event-stream",
     "OpenAI-Beta": "responses=experimental",
     "chatgpt-account-id": accountId,
-    originator: "pi",
+    originator,
     "User-Agent": userAgent,
   };
 };
@@ -179,7 +179,7 @@ export class OpenAITranslator implements Translator {
     const accountId = resolved.accountId || extractAccountId(resolved.accessToken);
     const response = await fetch(`${this.options.baseUrl || "https://chatgpt.com/backend-api"}/codex/responses`, {
       method: "POST",
-      headers: createCodexHeaders(resolved.accessToken, accountId),
+      headers: createCodexHeaders(resolved.accessToken, accountId, this.options.originator || "pi"),
       body: JSON.stringify({
         model: this.options.model,
         store: false,

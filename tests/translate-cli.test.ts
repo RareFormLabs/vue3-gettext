@@ -130,4 +130,21 @@ msgstr[2] ""
     expect(entries[0].targetPluralCount).toBe(3);
     expect(entries[0].previousTranslations).toEqual(["файл", "", ""]);
   });
+
+  it("respects locales with nplurals=1 for plural targets", () => {
+    const po = parsePo(`
+msgid ""
+msgstr ""
+"Language: ja\\n"
+"Plural-Forms: nplurals=1; plural=0;\\n"
+
+msgid "car"
+msgid_plural "cars"
+msgstr[0] ""
+`);
+
+    const entries = collectTranslationEntries(po);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].targetPluralCount).toBe(1);
+  });
 });
