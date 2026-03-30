@@ -47,6 +47,7 @@ console.log($gettext("Hello World!"));
 - simple, ergonomic API
 - reactive translations in Vue templates and TypeScript/JavaScript code
 - CLI to automatically extract messages from code files
+- AI-assisted PO translation for missing entries
 - support for pluralization and message contexts
 
 ## Extraction & Configuration
@@ -78,6 +79,18 @@ export default {
      */
     autoFill: ["en"],
   },
+  translate: {
+    provider: "openai",
+    model: "gpt-4.1-mini",
+    // optional: limit translation to specific locales instead of output.locales
+    locales: ["es"],
+    // default false: only fill untranslated entries
+    includeTranslated: false,
+    openai: {
+      // optional override, defaults to OPENAI_API_KEY
+      apiKeyEnvVar: "OPENAI_API_KEY",
+    },
+  },
 };
 ```
 
@@ -85,6 +98,12 @@ Run extraction:
 
 ```bash
 npx vue-gettext-extract
+```
+
+Run AI translation for missing entries:
+
+```bash
+OPENAI_API_KEY=your-key npx vue-gettext-translate
 ```
 
 Run compilation:

@@ -3,6 +3,7 @@ import { join } from "path";
 import { tmpdir } from "os";
 import { cwd } from "process";
 import { execSync } from "child_process";
+import { loadConfig } from "../scripts/config.js";
 
 describe("config format tests", () => {
   type WithTempDirTest = (tmpDir: string) => Promise<any>;
@@ -110,6 +111,48 @@ export default {
       );
       const appEnPo = (await readFile(join(tmpDir, "srctest", "lang", "en.po"))).toString();
       expect(appEnPo).not.toContain("#:");
+    });
+  });
+
+  it("loads translate config defaults and overrides", async () => {
+    await withTempDir(async (tmpDir) => {
+      await writeFile(
+        join(tmpDir, "package.json"),
+        JSON.stringify({
+          name: "test",
+          version: "0.0.1",
+          type: "module",
+        }),
+      );
+      await writeFile(
+        join(tmpDir, "gettext.config.js"),
+        `export default {
+          output: {
+            path: './srctest/lang',
+            locales: ['fr'],
+          },
+          translate: {
+            model: 'gpt-4.1',
+            locales: ['fr', 'de'],
+            openai: {
+              apiKeyEnvVar: 'CUSTOM_OPENAI_KEY',
+            },
+          },
+        };`,
+      );
+
+      const previousCwd = process.cwd();
+      process.chdir(tmpDir);
+      try {
+        const config = await loadConfig();
+        expect(config.translate.provider).toBe("openai");
+        expect(config.translate.model).toBe("gpt-4.1");
+        expect(config.translate.includeTranslated).toBe(false);
+        expect(config.translate.locales).toEqual(["fr", "de"]);
+        expect(config.translate.openai?.apiKeyEnvVar).toBe("CUSTOM_OPENAI_KEY");
+      } finally {
+        process.chdir(previousCwd);
+      }
     });
   });
 });

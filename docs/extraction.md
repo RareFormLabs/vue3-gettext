@@ -10,11 +10,14 @@ First, add scripts to your `package.json`:
 "scripts": {
   ...
   "gettext:extract": "vue-gettext-extract",
+  "gettext:translate": "vue-gettext-translate",
   "gettext:compile": "vue-gettext-compile",
 }
 ```
 
 `npm run gettext:extract` extracts messages from your code and creates `.po` files.
+
+`npm run gettext:translate` fills missing PO entries using your configured translation provider.
 
 `npm run gettext:compile` compiles the translated messages from the `.po` files to a `.json` to be used in your application.
 
@@ -78,6 +81,19 @@ const config = {
      */
     autoFill: false,
   },
+  translate: {
+    provider: "openai",
+    model: "gpt-4.1-mini",
+    locales: undefined, // defaults to output.locales
+    includeTranslated: false,
+    openai: {
+      apiKeyEnvVar: "OPENAI_API_KEY",
+      baseUrl: undefined,
+      model: undefined, // optional provider-specific override
+      organization: undefined,
+      project: undefined,
+    },
+  },
 };
 export default config;
 ```
@@ -95,6 +111,27 @@ To reduce this, set `addLocation: 'file'` to only include filenames, or `'never'
 For your primary language (e.g., English), it can be tedious to manually copy `msgid` to `msgstr`.
 
 Set `autoFill: ["en"]` to automatically populate empty translations in `en.po` with the source string. This allows you to treat the PO file for your default locale as a generated artifact.
+
+## AI translation workflow
+
+Keep extraction, translation, and compilation as separate steps:
+
+```bash
+npm run gettext:extract
+OPENAI_API_KEY=your-key npm run gettext:translate
+npm run gettext:compile
+```
+
+The translator reads your existing PO files, sends only untranslated entries by default, preserves `msgctxt` and `msgid_plural`, and writes the returned `msgstr` values back into the PO files.
+
+CLI flags:
+
+- `--config, -c` custom gettext config path
+- `--locale, -l` restrict translation to one or more locales
+- `--provider` provider name, currently `openai`
+- `--model` override the configured model
+- `--include-translated` retranslate entries that already have `msgstr` values
+- `--dry-run` call the provider without writing files
 
 ## Gotchas
 

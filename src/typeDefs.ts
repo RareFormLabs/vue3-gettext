@@ -128,11 +128,25 @@ export interface GettextConfig {
     addLocation?: "full" | "file" | "never";
     autoFill?: boolean | string[];
   };
+  translate: {
+    provider: string;
+    model: string;
+    locales?: string[];
+    includeTranslated: boolean;
+    openai?: {
+      apiKeyEnvVar?: string;
+      baseUrl?: string;
+      model?: string;
+      organization?: string;
+      project?: string;
+    };
+  };
 }
 
 export interface GettextConfigOptions {
   input?: Partial<GettextConfig["input"]>;
   output?: Partial<GettextConfig["output"]>;
+  translate?: Partial<GettextConfig["translate"]>;
 }
 
 interface GlobalTypes extends Pick<Language, "$gettext" | "$pgettext" | "$ngettext" | "$npgettext"> {

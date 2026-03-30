@@ -29,12 +29,14 @@
   },
   "bin": {
     "vue-gettext-compile": "./dist/gettext_compile.js",
-    "vue-gettext-extract": "./dist/gettext_extract.js"
+    "vue-gettext-extract": "./dist/gettext_extract.js",
+    "vue-gettext-translate": "./dist/gettext_translate.js"
   },
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:extract": "tsx --tsconfig scripts/tsconfig.json ./scripts/gettext_extract.ts",
+    "docs:translate": "tsx ./scripts/gettext_translate.ts",
     "docs:compile": "tsx ./scripts/gettext_compile.ts",
     "start": "vite serve dev",
     "build": "tsup",
