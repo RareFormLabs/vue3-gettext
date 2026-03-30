@@ -23,6 +23,7 @@ export type TranslationResult = {
 export type TranslatorRequest = {
   locale: string;
   entries: TranslationEntry[];
+  includeTranslated?: boolean;
 };
 
 export type Translator = {
@@ -55,12 +56,20 @@ export const buildItemKey = (item: InstanceType<typeof PO.Item>) =>
 const hasAnyTranslation = (item: InstanceType<typeof PO.Item>) =>
   item.msgstr.some((value) => value && value.trim().length > 0);
 
+const hasCompleteTranslation = (item: InstanceType<typeof PO.Item>, pluralCount: number) => {
+  const expectedCount = item.msgid_plural ? Math.max(pluralCount, item.msgstr.length || 0, 2) : 1;
+  return Array.from({ length: expectedCount }).every((_, index) => {
+    const value = item.msgstr[index];
+    return Boolean(value && value.trim().length > 0);
+  });
+};
+
 export const collectTranslationEntries = (po: PO, includeTranslated = false): TranslationEntry[] => {
   const pluralCount = parsePluralCount(po);
 
   return po.items
     .filter((item) => !(item as { obsolete?: boolean }).obsolete)
-    .filter((item) => includeTranslated || !hasAnyTranslation(item))
+    .filter((item) => includeTranslated || !hasCompleteTranslation(item, pluralCount))
     .map((item) => ({
       key: buildItemKey(item),
       msgid: item.msgid,

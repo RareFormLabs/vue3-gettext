@@ -110,7 +110,7 @@ const resolveTranslator = (
       continue;
     }
 
-    const translations = await translator.translate({ locale, entries });
+    const translations = await translator.translate({ locale, entries, includeTranslated });
     const changedEntries = applyTranslations(po, translations);
 
     if (options.dryRun) {

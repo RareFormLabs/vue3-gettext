@@ -60,7 +60,7 @@ const buildUserPrompt = (request: TranslatorRequest) =>
     instructions: {
       preserveFormatting: true,
       preservePlaceholders: true,
-      translateOnlyMissingEntries: true,
+      translateOnlyMissingEntries: !request.includeTranslated,
     },
     entries: request.entries.map((entry: TranslationEntry) => ({
       key: entry.key,
