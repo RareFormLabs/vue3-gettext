@@ -122,6 +122,25 @@ const decodeSseDataLine = (line: string) => {
   return payload;
 };
 
+const normalizeMsgstr = (value: unknown): string[] | undefined => {
+  if (Array.isArray(value) && value.every((entry) => typeof entry === "string")) {
+    return value;
+  }
+  if (typeof value === "string") {
+    return [value];
+  }
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value)
+      .filter(([key, entry]) => /^\d+$/.test(key) && typeof entry === "string")
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .map(([, entry]) => entry as string);
+    if (entries.length > 0) {
+      return entries;
+    }
+  }
+  return undefined;
+};
+
 const parseCodexSseResponse = async (response: Response) => {
   const text = await response.text();
   const dataLines = text
@@ -294,7 +313,8 @@ export class OpenAITranslator implements Translator {
       if (typeof translation.key !== "string") {
         throw new Error("OpenAI returned a translation without a valid string key.");
       }
-      if (!Array.isArray(translation.msgstr) || translation.msgstr.some((value) => typeof value !== "string")) {
+      const normalizedMsgstr = normalizeMsgstr((translation as { msgstr?: unknown }).msgstr);
+      if (!normalizedMsgstr) {
         throw new Error(`OpenAI returned an invalid msgstr array for translation key: ${translation.key}`);
       }
       if (seenKeys.has(translation.key)) {
@@ -305,12 +325,15 @@ export class OpenAITranslator implements Translator {
       if (!entry) {
         throw new Error(`OpenAI returned an unknown translation key: ${translation.key}`);
       }
-      if (translation.msgstr.length !== entry.targetPluralCount) {
+      if (normalizedMsgstr.length !== entry.targetPluralCount) {
         throw new Error(
-          `OpenAI returned ${translation.msgstr.length} forms for ${translation.key}, expected ${entry.targetPluralCount}.`,
+          `OpenAI returned ${normalizedMsgstr.length} forms for ${translation.key}, expected ${entry.targetPluralCount}.`,
         );
       }
-      return translation;
+      return {
+        key: translation.key,
+        msgstr: normalizedMsgstr,
+      };
     });
   }
 
