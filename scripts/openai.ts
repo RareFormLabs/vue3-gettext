@@ -313,9 +313,12 @@ export class OpenAITranslator implements Translator {
       if (typeof translation.key !== "string") {
         throw new Error("OpenAI returned a translation without a valid string key.");
       }
-      const normalizedMsgstr = normalizeMsgstr((translation as { msgstr?: unknown }).msgstr);
+      const rawMsgstr = (translation as { msgstr?: unknown }).msgstr;
+      const normalizedMsgstr = normalizeMsgstr(rawMsgstr);
       if (!normalizedMsgstr) {
-        throw new Error(`OpenAI returned an invalid msgstr array for translation key: ${translation.key}`);
+        throw new Error(
+          `OpenAI returned an invalid msgstr payload for translation key: ${translation.key}. Received: ${JSON.stringify(rawMsgstr)}`,
+        );
       }
       if (seenKeys.has(translation.key)) {
         throw new Error(`OpenAI returned a duplicate translation key: ${translation.key}`);
