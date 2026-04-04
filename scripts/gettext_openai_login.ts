@@ -23,13 +23,18 @@ try {
   process.exit(1);
 }
 
-(async () => {
-  const config = await loadConfig(options);
-  const openaiConfig = config.translate?.openai;
-  const credentialsPath = await loginAndSaveOpenAIOAuth({
-    credentialsPath: options.credentialsPath || openaiConfig?.credentialsPath,
-    originator: options.originator || openaiConfig?.originator,
-  });
+void (async () => {
+  try {
+    const config = await loadConfig(options);
+    const openaiConfig = config.translate?.openai;
+    const credentialsPath = await loginAndSaveOpenAIOAuth({
+      credentialsPath: options.credentialsPath ?? openaiConfig?.credentialsPath,
+      originator: options.originator ?? openaiConfig?.originator,
+    });
 
-  console.info(`${chalk.green("Saved OpenAI OAuth credentials")}: ${chalk.blueBright(credentialsPath)}`);
+    console.info(`${chalk.green("Saved OpenAI OAuth credentials")}: ${chalk.blueBright(credentialsPath)}`);
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
 })();

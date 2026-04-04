@@ -229,6 +229,15 @@ export class OpenAITranslator implements Translator {
 
     const seenKeys = new Set<string>();
     return parsed.translations.map((translation) => {
+      if (!translation || typeof translation !== "object") {
+        throw new Error("OpenAI returned a malformed translation object.");
+      }
+      if (typeof translation.key !== "string") {
+        throw new Error("OpenAI returned a translation without a valid string key.");
+      }
+      if (!Array.isArray(translation.msgstr) || translation.msgstr.some((value) => typeof value !== "string")) {
+        throw new Error(`OpenAI returned an invalid msgstr array for translation key: ${translation.key}`);
+      }
       if (seenKeys.has(translation.key)) {
         throw new Error(`OpenAI returned a duplicate translation key: ${translation.key}`);
       }

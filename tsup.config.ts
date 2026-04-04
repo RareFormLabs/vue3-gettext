@@ -20,12 +20,12 @@ export default defineConfig([
   },
   {
     entry: ["scripts/gettext_translate.ts"],
-    clean: true,
+    clean: false,
     format: ["esm"],
   },
   {
     entry: ["scripts/gettext_openai_login.ts"],
-    clean: true,
+    clean: false,
     format: ["esm"],
   },
 ]);

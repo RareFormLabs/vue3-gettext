@@ -111,7 +111,13 @@ export const applyTranslations = (
           }
           return value || "";
         })
-      : [options.includeTranslated ? translated[0] || "" : item.msgstr[0] || translated[0] || ""];
+      : [
+          options.includeTranslated
+            ? translated[0] || ""
+            : item.msgstr[0] && item.msgstr[0].trim().length > 0
+              ? item.msgstr[0]
+              : translated[0] || "",
+        ];
     if (JSON.stringify(item.msgstr) === JSON.stringify(nextMsgstr)) {
       continue;
     }
@@ -129,5 +135,13 @@ export const loadPoFile = async (filePath: string) => {
 };
 
 export const savePoFile = async (filePath: string, po: PO) => {
-  await fsPromises.writeFile(filePath, po.toString());
+  const dir = path.dirname(filePath);
+  const tempPath = path.join(dir, `.${path.basename(filePath)}.tmp-${process.pid}-${Date.now()}`);
+  try {
+    await fsPromises.writeFile(tempPath, po.toString(), { encoding: "utf-8" });
+    await fsPromises.rename(tempPath, filePath);
+  } catch (error) {
+    await fsPromises.unlink(tempPath).catch(() => undefined);
+    throw error;
+  }
 };

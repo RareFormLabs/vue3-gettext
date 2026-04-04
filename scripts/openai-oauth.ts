@@ -80,6 +80,11 @@ const loadCredentialsFromFile = async (credentialsPath: string): Promise<LoadedC
 
     const wrapped = normalizeCredentials(parsed.credentials);
     if (wrapped) {
+      if (parsed.provider && parsed.provider !== PROVIDER_ID) {
+        throw new Error(
+          `OAuth credential wrapper in ${credentialsPath} is for provider ${String(parsed.provider)}, expected ${PROVIDER_ID}.`,
+        );
+      }
       return { credentials: wrapped, source: "file", path: credentialsPath, format: "credentials-wrapper" };
     }
 
@@ -97,7 +102,8 @@ const saveCredentialsToFile = async (
   credentials: OAuthCredentials,
   format: LoadedCredentials["format"] = "plain",
 ) => {
-  await fsPromises.mkdir(path.dirname(credentialsPath), { recursive: true, mode: 0o700 });
+  const dir = path.dirname(credentialsPath);
+  await fsPromises.mkdir(dir, { recursive: true, mode: 0o700 });
 
   let content: Record<string, unknown> | OAuthCredentials;
   if (format === "provider-map") {
@@ -116,10 +122,22 @@ const saveCredentialsToFile = async (
     content = credentials;
   }
 
-  await fsPromises.writeFile(credentialsPath, `${JSON.stringify(content, null, 2)}\n`, {
-    encoding: "utf8",
-    mode: 0o600,
-  });
+  const tempPath = path.join(dir, `.${path.basename(credentialsPath)}.tmp-${process.pid}-${Date.now()}`);
+  let handle: fsPromises.FileHandle | undefined;
+  try {
+    handle = await fsPromises.open(tempPath, "w", 0o600);
+    await handle.writeFile(`${JSON.stringify(content, null, 2)}\n`, { encoding: "utf8" });
+    await handle.sync();
+    await handle.close();
+    handle = undefined;
+    await fsPromises.rename(tempPath, credentialsPath);
+  } catch (error) {
+    if (handle) {
+      await handle.close();
+    }
+    await fsPromises.unlink(tempPath).catch(() => undefined);
+    throw error;
+  }
 };
 
 export type ResolvedOpenAIOAuth = {
@@ -209,6 +227,7 @@ export const resolveOpenAIOAuth = async (config: OpenAIOAuthConfig = {}): Promis
 
 export const loginAndSaveOpenAIOAuth = async (config: OpenAIOAuthConfig = {}) => {
   const credentialsPath = expandHome(config.credentialsPath || DEFAULT_CREDENTIALS_PATH);
+  const existingCredentials = await loadCredentialsFromFile(credentialsPath);
   const credentials = await loginOpenAICodex({
     originator: config.originator,
     onAuth: ({ url, instructions }) => {
@@ -225,6 +244,6 @@ export const loginAndSaveOpenAIOAuth = async (config: OpenAIOAuthConfig = {}) =>
     },
   });
 
-  await saveCredentialsToFile(credentialsPath, credentials, "plain");
+  await saveCredentialsToFile(credentialsPath, credentials, existingCredentials?.format || "plain");
   return credentialsPath;
 };

@@ -111,7 +111,7 @@ const resolveTranslator = (
     }
 
     const translations = await translator.translate({ locale, entries, includeTranslated });
-    const changedEntries = applyTranslations(po, translations);
+    const changedEntries = applyTranslations(po, translations, { includeTranslated });
 
     if (options.dryRun) {
       console.info(`${chalk.green("Translated")}: ${chalk.blueBright(locale)} (${changedEntries} entries, dry run)`);
