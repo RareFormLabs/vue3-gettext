@@ -29,15 +29,19 @@
   },
   "bin": {
     "vue-gettext-compile": "./dist/gettext_compile.js",
-    "vue-gettext-extract": "./dist/gettext_extract.js"
+    "vue-gettext-extract": "./dist/gettext_extract.js",
+    "vue-gettext-translate": "./dist/gettext_translate.js",
+    "vue-gettext-openai-login": "./dist/gettext_openai_login.js"
   },
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:extract": "tsx --tsconfig scripts/tsconfig.json ./scripts/gettext_extract.ts",
+    "docs:translate": "tsx ./scripts/gettext_translate.ts",
     "docs:compile": "tsx ./scripts/gettext_compile.ts",
     "start": "vite serve dev",
     "build": "tsup",
+    "prepare": "npm run build",
     "test": "npm run test:types && npm run test:lint && npm run test:unit",
     "test:types": "vue-tsc --noEmit && vue-tsc --noEmit -p scripts && vue-tsc --noEmit -p docs/.vitepress",
     "test:lint": "npm run test:lint:js && npm run test:lint:prettier",
@@ -57,6 +61,7 @@
     "vue": ">=3.0.0"
   },
   "dependencies": {
+    "@mariozechner/pi-ai": "^0.63.1",
     "chalk": "^5.6.2",
     "command-line-args": "^6.0.2",
     "glob": "^13.0.6",
