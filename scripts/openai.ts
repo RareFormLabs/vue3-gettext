@@ -258,10 +258,6 @@ export class OpenAITranslator implements Translator {
           },
         ],
         text: { verbosity: "medium" },
-        response_format: {
-          type: "json_schema",
-          json_schema: translationResponseSchema,
-        },
       }),
     });
 
