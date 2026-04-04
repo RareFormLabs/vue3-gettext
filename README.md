@@ -81,10 +81,10 @@ export default {
   },
   translate: {
     provider: "openai",
-    model: "gpt-4.1-mini",
+    model: "gpt-4.1-mini", // default translation model
     // optional: limit translation to specific locales instead of output.locales
     locales: ["es"],
-    // default false: only fill untranslated entries
+    // default false: only fill missing entries; true means retranslate existing msgstr values too
     includeTranslated: false,
     openai: {
       /**
@@ -95,6 +95,8 @@ export default {
       authMode: "api-key",
       // optional override, defaults to OPENAI_API_KEY
       apiKeyEnvVar: "OPENAI_API_KEY",
+      // advanced: override the API base URL; normally leave unset
+      baseUrl: undefined,
     },
   },
 };
@@ -110,14 +112,19 @@ export default {
     includeTranslated: false,
     openai: {
       authMode: "oauth",
+      // where vue-gettext reads/writes saved OAuth credentials
       // defaults to ~/.vue-gettext/openai-codex-oauth.json
       credentialsPath: "./.gettext/openai-codex-oauth.json",
       // optional env overrides if you do not want a file
       accessTokenEnvVar: "OPENAI_OAUTH_ACCESS_TOKEN",
       refreshTokenEnvVar: "OPENAI_OAUTH_REFRESH_TOKEN",
       accountIdEnvVar: "OPENAI_OAUTH_ACCOUNT_ID",
-      // default true: persist refreshed tokens back to credentialsPath
+      // if a refresh occurs, save the updated credentials back to credentialsPath
       persistRefresh: true,
+      // advanced: override the backend endpoint; normally leave unset
+      baseUrl: undefined,
+      // advanced: override the OAuth originator header only if your environment needs it
+      originator: undefined,
     },
   },
 };
