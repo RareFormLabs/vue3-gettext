@@ -115,6 +115,10 @@ export default {
       // where vue-gettext reads/writes saved OAuth credentials
       // defaults to ~/.vue-gettext/openai-codex-oauth.json
       credentialsPath: "./.gettext/openai-codex-oauth.json",
+      // SECURITY WARNING: Do not commit OAuth credentials to version control!
+      // 1. Add credentialsPath to .gitignore (e.g., echo ".gettext/" >> .gitignore)
+      // 2. Restrict file permissions (e.g., chmod 600 ./.gettext/openai-codex-oauth.json)
+      // 3. Consider using env var overrides below to avoid storing tokens on disk
       // optional env overrides if you do not want a file
       accessTokenEnvVar: "OPENAI_OAUTH_ACCESS_TOKEN",
       refreshTokenEnvVar: "OPENAI_OAUTH_REFRESH_TOKEN",
@@ -131,6 +135,11 @@ export default {
 ```
 
 Credential file formats accepted in OAuth mode:
+
+**SECURITY WARNING**: Do not commit OAuth credentials to version control!
+- Add the credentials file to `.gitignore` (e.g., `echo ".gettext/" >> .gitignore`)
+- Restrict file permissions (e.g., `chmod 600 ./.gettext/openai-codex-oauth.json`)
+- Alternative: Use environment variable overrides (`accessTokenEnvVar`, `refreshTokenEnvVar`, `accountIdEnvVar`) to avoid storing tokens on disk
 
 ```json
 {
