@@ -48,6 +48,9 @@ const buildSystemPrompt = (locale: string) =>
   [
     `You translate gettext PO entries into locale ${locale}.`,
     "Return valid JSON only.",
+    'Each translation object must include both: a string "key" and an array "msgstr".',
+    'Example singular item: {"key":"...","msgstr":["..."]}',
+    'Example plural item: {"key":"...","msgstr":["singular form","plural form"]}',
     "Preserve placeholders, HTML, punctuation, whitespace intent, and line breaks.",
     "Never rewrite keys or omit entries.",
     "For plural entries, return one translation string per plural form requested.",
@@ -130,12 +133,22 @@ const normalizeMsgstr = (value: unknown): string[] | undefined => {
     return [value];
   }
   if (value && typeof value === "object") {
-    const entries = Object.entries(value)
+    const record = value as Record<string, unknown>;
+
+    const directKeys = Object.entries(record)
       .filter(([key, entry]) => /^\d+$/.test(key) && typeof entry === "string")
       .sort((a, b) => Number(a[0]) - Number(b[0]))
       .map(([, entry]) => entry as string);
-    if (entries.length > 0) {
-      return entries;
+    if (directKeys.length > 0) {
+      return directKeys;
+    }
+
+    const nestedCandidates = [record.msgstr, record.translations, record.translation, record.forms];
+    for (const candidate of nestedCandidates) {
+      const normalized = normalizeMsgstr(candidate);
+      if (normalized) {
+        return normalized;
+      }
     }
   }
   return undefined;
