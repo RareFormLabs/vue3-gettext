@@ -95,6 +95,72 @@ const decodeContent = (value: unknown) => {
   return "";
 };
 
+const decodeResponseOutputText = (response: unknown) => {
+  if (!response || typeof response !== "object") {
+    return "";
+  }
+
+  const directOutput = (response as { output?: Array<{ content?: unknown }> }).output;
+  const directContent = decodeContent(directOutput?.flatMap((item) => item.content || []) || []);
+  if (directContent) {
+    return directContent;
+  }
+
+  const outputText = (response as { output_text?: string }).output_text;
+  return typeof outputText === "string" ? outputText : "";
+};
+
+const decodeSseDataLine = (line: string) => {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith("data:")) {
+    return undefined;
+  }
+  const payload = trimmed.slice(5).trim();
+  if (!payload || payload === "[DONE]") {
+    return undefined;
+  }
+  return payload;
+};
+
+const parseCodexSseResponse = async (response: Response) => {
+  const text = await response.text();
+  const dataLines = text
+    .split(/\r?\n/)
+    .map((line) => decodeSseDataLine(line))
+    .filter((value): value is string => Boolean(value));
+
+  let lastResponse: unknown;
+  const outputChunks: string[] = [];
+
+  for (const payload of dataLines) {
+    let parsed: any;
+    try {
+      parsed = JSON.parse(payload);
+    } catch {
+      continue;
+    }
+
+    if (parsed?.type === "response.output_text.delta" && typeof parsed.delta === "string") {
+      outputChunks.push(parsed.delta);
+      continue;
+    }
+
+    if (parsed?.type === "response.completed" && parsed.response) {
+      lastResponse = parsed.response;
+      continue;
+    }
+
+    if (parsed?.response) {
+      lastResponse = parsed.response;
+    } else if (parsed?.type === "response.output_item.done" && parsed.item) {
+      lastResponse = { output: [{ content: [parsed.item] }] };
+    }
+  }
+
+  const completedText = decodeResponseOutputText(lastResponse);
+  return completedText || outputChunks.join("");
+};
+
 const extractAccountId = (token: string) => {
   try {
     const payload = token.split(".")[1];
@@ -183,7 +249,7 @@ export class OpenAITranslator implements Translator {
       body: JSON.stringify({
         model: this.options.model,
         store: false,
-        stream: false,
+        stream: true,
         instructions: buildSystemPrompt(request.locale),
         input: [
           {
@@ -203,10 +269,7 @@ export class OpenAITranslator implements Translator {
       throw new Error(`OpenAI OAuth request failed (${response.status}): ${await response.text()}`);
     }
 
-    const data = (await response.json()) as {
-      output?: Array<{ content?: unknown }>;
-    };
-    const content = decodeContent(data.output?.flatMap((item) => item.content || []) || []);
+    const content = await parseCodexSseResponse(response);
     return this.validateTranslations(request, content);
   }
 
