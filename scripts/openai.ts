@@ -306,20 +306,30 @@ export class OpenAITranslator implements Translator {
       throw new Error("OpenAI response did not include any content.");
     }
 
-    const parsed = JSON.parse(content) as { translations?: TranslationResult[] };
-    if (!Array.isArray(parsed.translations)) {
-      throw new Error("OpenAI response did not include a translations array.");
+    const parsed = JSON.parse(content) as
+      | { translations?: TranslationResult[] }
+      | TranslationResult[]
+      | Record<string, unknown>;
+    const translations = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray((parsed as { translations?: TranslationResult[] }).translations)
+        ? (parsed as { translations: TranslationResult[] }).translations
+        : Array.isArray((parsed as { items?: TranslationResult[] }).items)
+          ? (parsed as { items: TranslationResult[] }).items
+          : undefined;
+    if (!Array.isArray(translations)) {
+      throw new Error(`OpenAI response did not include a translations array. Received: ${content}`);
     }
 
     const entryMap = new Map(request.entries.map((entry) => [entry.key, entry]));
-    if (parsed.translations.length !== request.entries.length) {
+    if (translations.length !== request.entries.length) {
       throw new Error(
-        `OpenAI returned ${parsed.translations.length} translations for ${request.entries.length} requested entries.`,
+        `OpenAI returned ${translations.length} translations for ${request.entries.length} requested entries.`,
       );
     }
 
     const seenKeys = new Set<string>();
-    return parsed.translations.map((translation) => {
+    return translations.map((translation) => {
       if (!translation || typeof translation !== "object") {
         throw new Error("OpenAI returned a malformed translation object.");
       }
