@@ -49,5 +49,12 @@ export const loadConfig = async (cliArgs?: { config?: string }): Promise<Gettext
       addLocation: config.output?.addLocation,
       autoFill: config.output?.autoFill,
     },
+    translate: {
+      provider: config.translate?.provider || "openai",
+      model: config.translate?.model || config.translate?.openai?.model || "gpt-4.1-mini",
+      locales: config.translate?.locales,
+      includeTranslated: config.translate?.includeTranslated === undefined ? false : config.translate.includeTranslated,
+      openai: config.translate?.openai,
+    },
   };
 };

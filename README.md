@@ -47,11 +47,12 @@ console.log($gettext("Hello World!"));
 - simple, ergonomic API
 - reactive translations in Vue templates and TypeScript/JavaScript code
 - CLI to automatically extract messages from code files
+- AI-assisted PO translation for missing entries
 - support for pluralization and message contexts
 
-## Extraction & Configuration
+## Extraction, Translation & Configuration
 
-This fork includes improved extraction tools with configurable location comments and auto-filling support.
+This fork includes improved extraction tools with configurable location comments, auto-filling support, and optional AI-assisted translation.
 
 Create a `gettext.config.js` in your project root:
 
@@ -78,13 +79,117 @@ export default {
      */
     autoFill: ["en"],
   },
+  translate: {
+    provider: "openai",
+    model: "gpt-4.1-mini", // default translation model
+    // optional: limit translation to specific locales instead of output.locales
+    locales: ["es"],
+    // default false: only fill missing entries; true means retranslate existing msgstr values too
+    includeTranslated: false,
+    openai: {
+      /**
+       * Default: "api-key"
+       * - "api-key" uses https://api.openai.com/v1/chat/completions
+       * - "oauth" uses ChatGPT/Codex OAuth via @mariozechner/pi-ai and https://chatgpt.com/backend-api/codex/responses
+       */
+      authMode: "api-key",
+      // optional override, defaults to OPENAI_API_KEY
+      apiKeyEnvVar: "OPENAI_API_KEY",
+      // advanced: override the API base URL; normally leave unset
+      baseUrl: undefined,
+    },
+  },
 };
+```
+
+OAuth mode example:
+
+```js
+export default {
+  translate: {
+    provider: "openai",
+    model: "gpt-5.4",
+    includeTranslated: false,
+    openai: {
+      authMode: "oauth",
+      // where vue-gettext reads/writes saved OAuth credentials
+      // defaults to ~/.vue-gettext/openai-codex-oauth.json
+      credentialsPath: "./.gettext/openai-codex-oauth.json",
+      // SECURITY WARNING: Do not commit OAuth credentials to version control!
+      // 1. Add credentialsPath to .gitignore (e.g., echo ".gettext/" >> .gitignore)
+      // 2. Restrict file permissions (e.g., chmod 600 ./.gettext/openai-codex-oauth.json)
+      // 3. Consider using env var overrides below to avoid storing tokens on disk
+      // optional env overrides if you do not want a file
+      accessTokenEnvVar: "OPENAI_OAUTH_ACCESS_TOKEN",
+      refreshTokenEnvVar: "OPENAI_OAUTH_REFRESH_TOKEN",
+      accountIdEnvVar: "OPENAI_OAUTH_ACCOUNT_ID",
+      // if a refresh occurs, save the updated credentials back to credentialsPath
+      persistRefresh: true,
+      // advanced: override the backend endpoint; normally leave unset
+      baseUrl: undefined,
+      // advanced: override the OAuth originator header only if your environment needs it
+      originator: undefined,
+    },
+  },
+};
+```
+
+Credential file formats accepted in OAuth mode:
+
+**SECURITY WARNING**: Do not commit OAuth credentials to version control!
+- Add the credentials file to `.gitignore` (e.g., `echo ".gettext/" >> .gitignore`)
+- Restrict file permissions (e.g., `chmod 600 ./.gettext/openai-codex-oauth.json`)
+- Alternative: Use environment variable overrides (`accessTokenEnvVar`, `refreshTokenEnvVar`, `accountIdEnvVar`) to avoid storing tokens on disk
+
+```json
+{
+  "access": "<token>",
+  "refresh": "<token>",
+  "expires": 1760000000000,
+  "accountId": "user-123"
+}
+```
+
+or:
+
+```json
+{
+  "openai-codex": {
+    "access": "<token>",
+    "refresh": "<token>",
+    "expires": 1760000000000,
+    "accountId": "user-123"
+  }
+}
 ```
 
 Run extraction:
 
 ```bash
 npx vue-gettext-extract
+```
+
+Run AI translation for missing entries with API key auth:
+
+```bash
+OPENAI_API_KEY=your-key npx vue-gettext-translate
+```
+
+Run AI translation with OAuth auth:
+
+```bash
+OPENAI_OAUTH_ACCESS_TOKEN=... \
+OPENAI_OAUTH_REFRESH_TOKEN=... \
+OPENAI_OAUTH_ACCOUNT_ID=... \
+npx vue-gettext-translate
+```
+
+Or point `translate.openai.credentialsPath` at a saved OAuth JSON file.
+
+Login helper for OAuth:
+
+```bash
+npx vue-gettext-openai-login
 ```
 
 Run compilation:
