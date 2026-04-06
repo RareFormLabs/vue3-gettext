@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.3.0](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.2.0...vue3-gettext-v4.3.0) (2026-04-06)
+
+
+### Features
+
+* add AI-assisted translation CLI with OpenAI auth ([#84](https://github.com/RareFormLabs/vue3-gettext/issues/84)) ([c6e06ca](https://github.com/RareFormLabs/vue3-gettext/commit/c6e06ca0c2dc6286f5b0d583c51fe3dd82e4fe38))
+
+
+### Bug Fixes
+
+* **deps:** update dependency @mariozechner/pi-ai to ^0.65.0 ([#90](https://github.com/RareFormLabs/vue3-gettext/issues/90)) ([3e973b5](https://github.com/RareFormLabs/vue3-gettext/commit/3e973b576f268a776dbf8b77caf87c79230c1f61))
+* **deps:** update dependency @mariozechner/pi-ai to ^0.65.2 ([#92](https://github.com/RareFormLabs/vue3-gettext/issues/92)) ([f763fdc](https://github.com/RareFormLabs/vue3-gettext/commit/f763fdcc6ebafa8429f18f10882b3ec9719f0e58))
+
 ## [4.2.0](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.1.2...vue3-gettext-v4.2.0) (2026-03-26)
 
 
