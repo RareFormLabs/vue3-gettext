@@ -5,6 +5,10 @@
   "schedule": ["at any time"],
   "rangeStrategy": "bump",
   "prConcurrentLimit": 10,
+  "postUpdateOptions": ["npmInstallTwice"],
+  "lockFileMaintenance": {
+    "enabled": true
+  },
   "packageRules": [
     {
       "matchUpdateTypes": ["patch"],
