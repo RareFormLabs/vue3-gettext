@@ -5,6 +5,7 @@
   "schedule": ["at any time"],
   "rangeStrategy": "bump",
   "prConcurrentLimit": 10,
+  "postUpdateOptions": ["npmInstallTwice"],
   "packageRules": [
     {
       "matchUpdateTypes": ["patch"],
