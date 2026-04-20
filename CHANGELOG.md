@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.3.1](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.3.0...vue3-gettext-v4.3.1) (2026-04-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @mariozechner/pi-ai to ^0.67.68 ([#96](https://github.com/RareFormLabs/vue3-gettext/issues/96)) ([885d0f7](https://github.com/RareFormLabs/vue3-gettext/commit/885d0f7f7a9b9e198467ced989eb24592e7a43e2))
+
 ## [4.3.0](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.2.0...vue3-gettext-v4.3.0) (2026-04-06)
 
 
