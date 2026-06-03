@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 
-import chalk from "chalk";
 import commandLineArgs, { OptionDefinition } from "command-line-args";
-import fs from "node:fs";
 import { glob } from "glob";
 import path from "node:path";
 import { GettextConfig } from "../src/typeDefs.js";
 import { chmodSync, existsSync, lstatSync, mkdirSync, writeFileSync } from "node:fs";
 import { loadConfig } from "./config.js";
 import { extractAndCreatePOT } from "./extract.js";
-import { execShellCommand } from "./utils.js";
+import { execShellCommand, colorize } from "./utils.js";
 
 const optionDefinitions: OptionDefinition[] = [{ name: "config", alias: "c", type: String }];
 let options;
@@ -26,14 +24,14 @@ const getFiles = async (config: GettextConfig) => {
   const allFiles = await Promise.all(
     config.input?.include.map((pattern) => {
       const searchPath = path.join(config.input.path, pattern).replace(/\\/g, "/");
-      console.info(`Searching: ${chalk.blueBright(searchPath)}`);
+      console.info(`Searching: ${colorize("blue", searchPath)}`);
       return glob(searchPath);
     }),
   );
   const excludeFiles = await Promise.all(
     config.input.exclude.map((pattern) => {
       const searchPath = path.join(config.input.path, pattern).replace(/\\/g, "/");
-      console.info(`Excluding: ${chalk.blueBright(searchPath)}`);
+      console.info(`Excluding: ${colorize("blue", searchPath)}`);
       return glob(searchPath);
     }),
   );
@@ -50,16 +48,16 @@ const getFiles = async (config: GettextConfig) => {
 
 (async () => {
   const config = await loadConfig(options);
-  console.info(`Input directory: ${chalk.blueBright(config.input.path)}`);
-  console.info(`Output directory: ${chalk.blueBright(config.output.path)}`);
-  console.info(`Output POT file: ${chalk.blueBright(config.output.potPath)}`);
-  console.info(`Locales: ${chalk.blueBright(config.output.locales)}`);
-  console.info(`Locations: ${chalk.blueBright(config.output.locations)}`);
+  console.info(`Input directory: ${colorize("blue", config.input.path)}`);
+  console.info(`Output directory: ${colorize("blue", config.output.path)}`);
+  console.info(`Output POT file: ${colorize("blue", config.output.potPath)}`);
+  console.info(`Locales: ${colorize("blue", config.output.locales)}`);
+  console.info(`Locations: ${colorize("blue", config.output.locations)}`);
   console.info();
 
   const files = await getFiles(config);
   console.info();
-  files.forEach((f) => console.info(chalk.grey(f)));
+  files.forEach((f) => console.info(colorize("grey", f)));
   console.info();
   await extractAndCreatePOT(files, config.output.potPath, config);
 
@@ -75,7 +73,7 @@ const getFiles = async (config: GettextConfig) => {
       await execShellCommand(
         `msgmerge --lang=${loc} --update ${poFile} ${config.output.potPath} ${noFuzzyMatching} ${noLocation} --backup=off`,
       );
-      console.info(`${chalk.green("Merged")}: ${chalk.blueBright(poFile)}`);
+      console.info(`${colorize("green", "Merged")}: ${colorize("blue", poFile)}`);
     } else {
       // https://www.gnu.org/software/gettext/manual/html_node/msginit-Invocation.html
       // msginit will set Plural-Forms header if the locale is in the
@@ -87,13 +85,13 @@ const getFiles = async (config: GettextConfig) => {
       );
       chmodSync(poFile, 0o666);
       await execShellCommand(`msgattrib --no-wrap --no-obsolete ${noLocation} -o ${poFile} ${poFile}`);
-      console.info(`${chalk.green("Created")}: ${chalk.blueBright(poFile)}`);
+      console.info(`${colorize("green", "Created")}: ${colorize("blue", poFile)}`);
     }
   }
   if (config.output.linguas === true) {
     const linguasPath = path.join(config.output.path, "LINGUAS");
     writeFileSync(linguasPath, config.output.locales.join(" "));
     console.info();
-    console.info(`${chalk.green("Created")}: ${chalk.blueBright(linguasPath)}`);
+    console.info(`${colorize("green", "Created")}: ${colorize("blue", linguasPath)}`);
   }
 })();

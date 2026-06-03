@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-import chalk from "chalk";
 import commandLineArgs, { OptionDefinition } from "command-line-args";
 import fsPromises from "node:fs/promises";
 import path from "node:path";
 import { compilePoFiles } from "./compile.js";
 import { loadConfig } from "./config.js";
+import { colorize } from "./utils.js";
 
 const optionDefinitions: OptionDefinition[] = [{ name: "config", alias: "c", type: String }];
 let options;
@@ -20,8 +20,8 @@ try {
 
 (async () => {
   const config = await loadConfig(options);
-  console.info(`Language directory: ${chalk.blueBright(config.output.path)}`);
-  console.info(`Locales: ${chalk.blueBright(config.output.locales)}`);
+  console.info(`Language directory: ${colorize("blue", config.output.path)}`);
+  console.info(`Locales: ${colorize("blue", config.output.locales)}`);
   console.info();
   const localesPaths = config.output.locales.map((loc) =>
     config.output.flat ? path.join(config.output.path, `${loc}.po`) : path.join(config.output.path, `${loc}/app.po`),
@@ -29,7 +29,7 @@ try {
 
   await fsPromises.mkdir(config.output.path, { recursive: true });
   const jsonRes = await compilePoFiles(localesPaths);
-  console.info(`${chalk.green("Compiled json")}: ${chalk.grey(JSON.stringify(jsonRes))}`);
+  console.info(`${colorize("green", "Compiled json")}: ${colorize("grey", JSON.stringify(jsonRes))}`);
   console.info();
   if (config.output.splitJson) {
     await Promise.all(
@@ -41,12 +41,12 @@ try {
             [locale]: jsonRes[locale],
           }),
         );
-        console.info(`${chalk.green("Created")}: ${chalk.blueBright(outputPath)}`);
+        console.info(`${colorize("green", "Created")}: ${colorize("blue", outputPath)}`);
       }),
     );
   } else {
     const outputPath = config.output.jsonPath;
     await fsPromises.writeFile(outputPath, JSON.stringify(jsonRes));
-    console.info(`${chalk.green("Created")}: ${chalk.blueBright(outputPath)}`);
+    console.info(`${colorize("green", "Created")}: ${colorize("blue", outputPath)}`);
   }
 })();

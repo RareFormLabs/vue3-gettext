@@ -4,7 +4,6 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "baseUrl": "./",
     "skipLibCheck": true,
     "lib": ["ES5", "ES2021"]
   },

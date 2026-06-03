@@ -127,10 +127,10 @@ export function getKeywords(keywords?: KeywordMapping, overrideDefaults = false)
   }
   // merge with defaults
   return {
-    simple: ["$gettext", ...(keywords?.simple ? keywords?.simple : [])],
-    plural: ["$ngettext", ...(keywords?.plural ? keywords?.plural : [])],
-    ctxPlural: ["$npgettext", ...(keywords?.ctxPlural ? keywords?.ctxPlural : [])],
-    ctx: ["$pgettext", ...(keywords?.ctx ? keywords?.ctx : [])],
+    simple: ["$gettext", ...(keywords?.simple ? keywords.simple : [])],
+    plural: ["$ngettext", ...(keywords?.plural ? keywords.plural : [])],
+    ctxPlural: ["$npgettext", ...(keywords?.ctxPlural ? keywords.ctxPlural : [])],
+    ctx: ["$pgettext", ...(keywords?.ctx ? keywords.ctx : [])],
   };
 }
 

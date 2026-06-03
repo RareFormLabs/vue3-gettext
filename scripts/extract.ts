@@ -1,9 +1,9 @@
-import chalk from "chalk";
 import fs from "node:fs";
 import { MsgInfo, makePO, parseSrc } from "../src/extract/parser.js";
 import { GettextConfigOptions } from "../src/typeDefs.js";
 
 import PO from "pofile";
+import { colorize } from "./utils.js";
 
 export async function extractAndCreatePOT(filePaths: string[], potPath: string, config: GettextConfigOptions) {
   const fileMsgMap: { path: string; msgs: MsgInfo[] }[] = [];
@@ -54,5 +54,5 @@ export async function extractAndCreatePOT(filePaths: string[], potPath: string, 
     console.error(err);
   }
 
-  console.info(`${chalk.green("Extraction successful")}, ${chalk.blueBright(potPath)} created.`);
+  console.info(`${colorize("green", "Extraction successful")}, ${colorize("blue", potPath)} created.`);
 }
