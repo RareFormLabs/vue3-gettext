@@ -19,5 +19,5 @@ const terminalFontColors = {
   grey: "[30;1m",
 };
 export function colorize(color: keyof typeof terminalFontColors, str: unknown): string {
-  return `${terminalEsc}${terminalFontColors[color]}${str}${terminalFontColorReset}`;
+  return `${terminalEsc}${terminalFontColors[color]}${str}${terminalEsc}${terminalFontColorReset}`;
 }
