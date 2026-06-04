@@ -51,7 +51,7 @@ const getFiles = async (config: GettextConfig) => {
   console.info(`Input directory: ${colorize("blue", config.input.path)}`);
   console.info(`Output directory: ${colorize("blue", config.output.path)}`);
   console.info(`Output POT file: ${colorize("blue", config.output.potPath)}`);
-  console.info(`Locales: ${colorize("blue", config.output.locales)}`);
+  console.info(`Locales: ${colorize("blue", config.output.locales.join(", "))}`);
   console.info(`Locations: ${colorize("blue", config.output.locations)}`);
   console.info();
 
