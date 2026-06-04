@@ -1,7 +1,11 @@
 <template>
   <div class="pluralization">
     <DemoBox>
-      {{ $ngettext("I have %{count} book.", "I have %{count} books.", count, { count }) }}
+      {{
+        $ngettext("I have %{count} book.", "I have %{count} books.", count, {
+          count,
+        })
+      }}
     </DemoBox>
     <h5>Set count:</h5>
     <div class="controls">

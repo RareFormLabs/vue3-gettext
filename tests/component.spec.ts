@@ -23,7 +23,9 @@ describe("translate component tests", () => {
 
   it("returns an untranslated string when no translation is available for a language", async () => {
     const warnSpy = vi.spyOn(console, "warn");
-    const wrapper = mount({ template: "<div>{{ $gettext('Untranslated string') }}</div>" });
+    const wrapper = mount({
+      template: "<div>{{ $gettext('Untranslated string') }}</div>",
+    });
     const vm = wrapper.vm as any;
     vm.$language.current = "fr_BE";
     await vm.$nextTick();
@@ -34,7 +36,9 @@ describe("translate component tests", () => {
 
   it("returns an untranslated string when no translation key is available", async () => {
     const warnSpy = vi.spyOn(console, "warn");
-    const wrapper = mount({ template: "<div>{{ $gettext('Untranslated string') }}</div>" });
+    const wrapper = mount({
+      template: "<div>{{ $gettext('Untranslated string') }}</div>",
+    });
     const vm = wrapper.vm as any;
     await vm.$nextTick();
     expect(vm.$el.innerHTML.trim()).toEqual("Untranslated string");
@@ -61,11 +65,15 @@ describe("translate component tests", () => {
   });
 
   it("translates known strings according to a given translation context", async () => {
-    let wrapper = mount({ template: '<div>{{ $pgettext("Verb", "Answer") }}</div>' });
+    let wrapper = mount({
+      template: '<div>{{ $pgettext("Verb", "Answer") }}</div>',
+    });
     let vm = wrapper.vm as any;
     await vm.$nextTick();
     expect(vm.$el.innerHTML.trim()).toEqual("Answer (verb)");
-    wrapper = mount({ template: '<div>{{ $pgettext("Noun", "Answer") }}</div>' });
+    wrapper = mount({
+      template: '<div>{{ $pgettext("Noun", "Answer") }}</div>',
+    });
     vm = wrapper.vm as any;
     vm.$language.current = "en_US";
     await vm.$nextTick();
