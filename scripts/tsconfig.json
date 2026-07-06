@@ -7,5 +7,5 @@
     "esModuleInterop": true,
     "lib": ["ES5", "ES2021"]
   },
-  "include": ["**/*.ts"]
+  "include": ["*.ts", "**/*.ts"]
 }

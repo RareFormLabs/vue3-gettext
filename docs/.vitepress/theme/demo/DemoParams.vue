@@ -1,7 +1,12 @@
 <template>
   <div class="params">
     <DemoBox>
-      {{ $gettext("%{name} is a good friend. My favorite number is %{favNum}.", { name, favNum: number }) }}
+      {{
+        $gettext("%{name} is a good friend. My favorite number is %{favNum}.", {
+          name,
+          favNum: number,
+        })
+      }}
     </DemoBox>
     <div class="inputs">
       <label class="input">

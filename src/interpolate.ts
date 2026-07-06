@@ -22,21 +22,18 @@ const INTERPOLATION_RE = /%\{((?:.|\n)+?)\}/g;
 
 const MUSTACHE_SYNTAX_RE = /\{\{((?:.|\n)+?)\}\}/g;
 
-/**
- * Evaluate a piece of template string containing %{ } placeholders.
- * E.g.: 'Hi %{ user.name }' => 'Hi Bob'
- *
- * This is a vm.$interpolate alternative for Vue 2.
- * https://vuejs.org/v2/guide/migration.html#vm-interpolate-removed
- *
- * @param {String} msgid - The translation key containing %{ } placeholders
- * @param {Object} context - An object whose elements are put in their corresponding placeholders
- *
- * @return {String} The interpolated string
- */
 const interpolate =
   (plugin: Language) =>
-  (msgid: string, context: any = {}, parent?: ComponentInternalInstance | any) => {
+  /**
+   * Evaluate a piece of template string containing %{ } placeholders.
+   * E.g.: 'Hi %{ user.name }' => 'Hi Bob'
+   *
+   * @param {string} msgid - The translation key containing %{ } placeholders
+   * @param {Object} context - An object whose elements are put in their corresponding placeholders
+   *
+   * @return {string} The interpolated string
+   */
+  (msgid: string, context: object = {}, parent?: ComponentInternalInstance): string => {
     const silent = plugin.silent;
     if (!silent && MUSTACHE_SYNTAX_RE.test(msgid)) {
       console.warn(`Mustache syntax cannot be used with vue-gettext. Please use "%{}" instead of "{{}}" in: ${msgid}`);
@@ -44,15 +41,7 @@ const interpolate =
 
     const result = msgid.replace(INTERPOLATION_RE, (_match, token: string) => {
       const expression = token.trim();
-      let evaluated: Object;
-
-      const escapeHtmlMap = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;",
-      };
+      let evaluated: any;
 
       // Avoid eval() by splitting `expression` and looping through its different properties if any, see #55.
       function getProps(obj: any, expression: string) {
@@ -66,7 +55,7 @@ const interpolate =
       function evalInContext(context: any, expression: string, parent: any): string {
         try {
           evaluated = getProps(context, expression);
-        } catch (e) {
+        } catch {
           // Ignore errors, because this function may be called recursively later.
         }
         if (evaluated === undefined || evaluated === null) {

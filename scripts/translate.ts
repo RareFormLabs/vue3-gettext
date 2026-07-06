@@ -57,9 +57,6 @@ export const buildItemKey = (item: InstanceType<typeof PO.Item>) =>
     msgidPlural: item.msgid_plural || "",
   });
 
-const hasAnyTranslation = (item: InstanceType<typeof PO.Item>) =>
-  item.msgstr.some((value) => value && value.trim().length > 0);
-
 const hasCompleteTranslation = (item: InstanceType<typeof PO.Item>, pluralCount: number) => {
   const expectedCount = item.msgid_plural ? Math.max(pluralCount, item.msgstr.length || 0, 1) : 1;
   return Array.from({ length: expectedCount }).every((_, index) => {

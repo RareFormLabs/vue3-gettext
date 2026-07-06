@@ -51,20 +51,40 @@ export default {
 </template>
 `;
     expect(tokenize(keywords, src)).toEqual(<Token[]>[
-      { kind: TokenKind.Unrecognized, idx: 41, value: `\n<script>\nexport default {\n  name: 'Test'` },
+      {
+        kind: TokenKind.Unrecognized,
+        idx: 41,
+        value: `\n<script>\nexport default {\n  name: 'Test'`,
+      },
       { kind: TokenKind.Comma, idx: 41 },
-      { kind: TokenKind.Unrecognized, idx: 84, value: `\n  props: {\n    user: {\n      type: Object` },
+      {
+        kind: TokenKind.Unrecognized,
+        idx: 84,
+        value: `\n  props: {\n    user: {\n      type: Object`,
+      },
       { kind: TokenKind.Comma, idx: 84 },
-      { kind: TokenKind.Unrecognized, idx: 106, value: `\n      required: true` },
+      {
+        kind: TokenKind.Unrecognized,
+        idx: 106,
+        value: `\n      required: true`,
+      },
       { kind: TokenKind.Comma, idx: 106 },
       { kind: TokenKind.Unrecognized, idx: 113, value: `\n    }` },
       { kind: TokenKind.Comma, idx: 113 },
       { kind: TokenKind.Unrecognized, idx: 118, value: `\n  }` },
       { kind: TokenKind.Comma, idx: 118 },
-      { kind: TokenKind.Unrecognized, idx: 158, value: `\n}\n</script>\n<template>\n  <div>\n    {{ ` },
+      {
+        kind: TokenKind.Unrecognized,
+        idx: 158,
+        value: `\n}\n</script>\n<template>\n  <div>\n    {{ `,
+      },
       { kind: TokenKind.Keyword, idx: 158, value: "$gettext" },
       { kind: TokenKind.ParenLeft, idx: 166 },
-      { kind: TokenKind.String, idx: 167, value: "%{fullName} wants to say hello" },
+      {
+        kind: TokenKind.String,
+        idx: 167,
+        value: "%{fullName} wants to say hello",
+      },
       { kind: TokenKind.Comma, idx: 199 },
     ]);
   });

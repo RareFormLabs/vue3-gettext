@@ -137,6 +137,7 @@ export default {
 Credential file formats accepted in OAuth mode:
 
 **SECURITY WARNING**: Do not commit OAuth credentials to version control!
+
 - Add the credentials file to `.gitignore` (e.g., `echo ".gettext/" >> .gitignore`)
 - Restrict file permissions (e.g., `chmod 600 ./.gettext/openai-codex-oauth.json`)
 - Alternative: Use environment variable overrides (`accessTokenEnvVar`, `refreshTokenEnvVar`, `accountIdEnvVar`) to avoid storing tokens on disk

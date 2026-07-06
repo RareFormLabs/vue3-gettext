@@ -63,7 +63,10 @@ export function parseFunctionCall(mapping: KeywordMapping, tokens: Token[]): Msg
     }
 
     if (stringArgs.length) {
-      msgs.push(getMsgInfo(mapping, keyword, charIndex, stringArgs));
+      const info = getMsgInfo(mapping, keyword, charIndex, stringArgs);
+      if (info) {
+        msgs.push(info);
+      }
     }
   }
 
@@ -75,7 +78,7 @@ function getMsgInfo(
   keyword: string,
   charIdx: number,
   stringArgs: string[],
-): MsgInfoWithCharIdx {
+): MsgInfoWithCharIdx | null {
   if (mapping.simple?.includes(keyword)) {
     return {
       message: stringArgs[0],
@@ -91,6 +94,12 @@ function getMsgInfo(
     };
   }
   if (mapping.ctx?.includes(keyword)) {
+    if (!stringArgs[1]) {
+      console.warn(
+        `Skipping ${keyword}() extraction at char ${charIdx}: context message argument is missing or not a string literal.`,
+      );
+      return null;
+    }
     return {
       context: stringArgs[0],
       message: stringArgs[1],
@@ -98,6 +107,12 @@ function getMsgInfo(
     };
   }
   if (mapping.ctxPlural?.includes(keyword)) {
+    if (!stringArgs[1]) {
+      console.warn(
+        `Skipping ${keyword}() extraction at char ${charIdx}: singular message argument is missing or not a string literal.`,
+      );
+      return null;
+    }
     return {
       context: stringArgs[0],
       message: stringArgs[1],
@@ -118,10 +133,10 @@ export function getKeywords(keywords?: KeywordMapping, overrideDefaults = false)
   }
   // merge with defaults
   return {
-    simple: ["$gettext", ...(keywords?.simple ? keywords?.simple : [])],
-    plural: ["$ngettext", ...(keywords?.plural ? keywords?.plural : [])],
-    ctxPlural: ["$npgettext", ...(keywords?.ctxPlural ? keywords?.ctxPlural : [])],
-    ctx: ["$pgettext", ...(keywords?.ctx ? keywords?.ctx : [])],
+    simple: ["$gettext", ...(keywords?.simple ? keywords.simple : [])],
+    plural: ["$ngettext", ...(keywords?.plural ? keywords.plural : [])],
+    ctxPlural: ["$npgettext", ...(keywords?.ctxPlural ? keywords.ctxPlural : [])],
+    ctx: ["$pgettext", ...(keywords?.ctx ? keywords.ctx : [])],
   };
 }
 

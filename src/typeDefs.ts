@@ -164,7 +164,3 @@ interface GlobalTypes extends Pick<Language, "$gettext" | "$pgettext" | "$ngette
 declare module "vue" {
   interface ComponentCustomProperties extends GlobalTypes {}
 }
-
-declare module "@vue/runtime-core" {
-  interface ComponentCustomProperties extends GlobalTypes {}
-}
