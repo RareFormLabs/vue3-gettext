@@ -90,7 +90,7 @@ export default {
       /**
        * Default: "api-key"
        * - "api-key" uses https://api.openai.com/v1/chat/completions
-       * - "oauth" uses ChatGPT/Codex OAuth via @mariozechner/pi-ai and https://chatgpt.com/backend-api/codex/responses
+       * - "oauth" uses ChatGPT/Codex OAuth via @earendil-works/pi-ai and https://chatgpt.com/backend-api/codex/responses
        */
       authMode: "api-key",
       // optional override, defaults to OPENAI_API_KEY

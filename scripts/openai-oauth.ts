@@ -1,7 +1,7 @@
 import fsPromises from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { getOAuthApiKey, loginOpenAICodex, type OAuthCredentials } from "@mariozechner/pi-ai/oauth";
+import { getOAuthApiKey, loginOpenAICodex, type OAuthCredentials } from "@earendil-works/pi-ai/oauth";
 
 type OpenAIOAuthConfig = {
   credentialsPath?: string;
