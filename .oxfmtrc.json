@@ -1,0 +1,8 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 120,
+  "arrowParens": "always",
+  "trailingComma": "all",
+  "sortPackageJson": false,
+  "ignorePatterns": ["docs/.vitepress/language/translations.json"]
+}

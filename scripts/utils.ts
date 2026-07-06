@@ -10,3 +10,14 @@ export function execShellCommand(cmd: string) {
     });
   });
 }
+
+const terminalEsc = "\x1b";
+const terminalFontColorReset = "\x1b[0m";
+const terminalFontColors = {
+  blue: "[34;1m",
+  green: "[32m",
+  grey: "[90m",
+};
+export function colorize(color: keyof typeof terminalFontColors, str: unknown): string {
+  return `${terminalEsc}${terminalFontColors[color]}${str}${terminalEsc}${terminalFontColorReset}`;
+}

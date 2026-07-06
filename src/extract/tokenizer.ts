@@ -38,7 +38,11 @@ export function tokenize(mapping: KeywordMapping, src: string): Token[] {
 
   function addToken(kind: TokenKind, charIndex: number, value?: string) {
     if (unrecognizedContent.trim()) {
-      tokens.push({ kind: TokenKind.Unrecognized, idx, value: unrecognizedContent });
+      tokens.push({
+        kind: TokenKind.Unrecognized,
+        idx,
+        value: unrecognizedContent,
+      });
       unrecognizedContent = "";
     }
     if (value) {

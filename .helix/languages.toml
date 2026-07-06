@@ -1,0 +1,15 @@
+[[language]]
+name = "javascript"
+formatter = { command = "npx", args = ["oxfmt", "--stdin-filepath=buffer.js"] }
+
+[[language]]
+name = "json"
+formatter = { command = "npx", args = ["oxfmt", "--stdin"] }
+
+[[language]]
+name = "typescript"
+formatter = { command = "npx", args = ["oxfmt", "--stdin-filepath=buffer.ts"] }
+
+[[language]]
+name = "vue"
+formatter = { command = "npx", args = ["oxfmt", "--stdin-filepath=buffer.vue"] }
