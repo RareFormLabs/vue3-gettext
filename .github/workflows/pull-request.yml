@@ -1,14 +1,17 @@
 name: pull request
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - master
     types: [opened, edited, reopened, synchronize]
 
 jobs:
-  test:
-    name: "test"
+  prettier:
+    name: "prettier"
     runs-on: ubuntu-latest
 
     steps:
@@ -26,8 +29,35 @@ jobs:
           sudo apt-get install -y gettext
       - name: install npm dependencies
         run: npm ci
-      - name: run tests
-        run: npm run test
+      - name: check formatting
+        run: npm run test:lint:prettier
+
+  test:
+    name: "test"
+    runs-on: ubuntu-latest
+    needs: prettier
+
+    steps:
+      - name: check out repo
+        uses: actions/checkout@v6
+
+      - name: setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.20.2
+          cache: npm
+      - name: install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext
+      - name: install npm dependencies
+        run: npm ci
+      - name: run type checks
+        run: npm run test:types
+      - name: run eslint
+        run: npm run test:lint:js
+      - name: run unit tests
+        run: npm run test:unit
       - name: build package
         run: npm run build
       - name: build docs
