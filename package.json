@@ -82,7 +82,7 @@
     "vitepress": "^1.6.4",
     "vitest": "^4.1.8",
     "vue": "^3.5.39",
-    "vue-tsc": "^3.2.9"
+    "vue-tsc": "^3.3.6"
   },
   "exports": {
     "import": "./dist/index.js",
