@@ -6,12 +6,16 @@
   "rangeStrategy": "bump",
   "prConcurrentLimit": 10,
   "postUpdateOptions": ["npmInstallTwice"],
+  "automergeType": "pr",
+  "platformAutomerge": true,
   "lockFileMaintenance": {
     "enabled": true
   },
   "packageRules": [
     {
-      "matchUpdateTypes": ["patch"],
+      "description": "Auto-merge low-risk dependency updates after they have aged for a week and CI is green.",
+      "matchUpdateTypes": ["minor", "patch", "lockFileMaintenance"],
+      "minimumReleaseAge": "7 days",
       "automerge": true
     },
     {
