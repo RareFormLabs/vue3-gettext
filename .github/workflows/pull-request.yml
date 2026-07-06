@@ -9,6 +9,8 @@ on:
       - master
     types: [opened, edited, reopened, synchronize]
 
+permissions: {}
+
 jobs:
   format:
     name: "format"

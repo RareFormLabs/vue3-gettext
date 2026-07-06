@@ -95,6 +95,9 @@ function getMsgInfo(
   }
   if (mapping.ctx?.includes(keyword)) {
     if (!stringArgs[1]) {
+      console.warn(
+        `Skipping ${keyword}() extraction at char ${charIdx}: context message argument is missing or not a string literal.`,
+      );
       return null;
     }
     return {
@@ -105,6 +108,9 @@ function getMsgInfo(
   }
   if (mapping.ctxPlural?.includes(keyword)) {
     if (!stringArgs[1]) {
+      console.warn(
+        `Skipping ${keyword}() extraction at char ${charIdx}: singular message argument is missing or not a string literal.`,
+      );
       return null;
     }
     return {

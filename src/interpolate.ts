@@ -33,7 +33,7 @@ const interpolate =
    *
    * @return {string} The interpolated string
    */
-  (msgid: string, context: object = {}, parent?: ComponentInternalInstance | any): string => {
+  (msgid: string, context: object = {}, parent?: ComponentInternalInstance): string => {
     const silent = plugin.silent;
     if (!silent && MUSTACHE_SYNTAX_RE.test(msgid)) {
       console.warn(`Mustache syntax cannot be used with vue-gettext. Please use "%{}" instead of "{{}}" in: ${msgid}`);

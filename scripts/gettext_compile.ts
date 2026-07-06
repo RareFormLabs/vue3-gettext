@@ -21,7 +21,7 @@ try {
 (async () => {
   const config = await loadConfig(options);
   console.info(`Language directory: ${colorize("blue", config.output.path)}`);
-  console.info(`Locales: ${colorize("blue", config.output.locales)}`);
+  console.info(`Locales: ${colorize("blue", config.output.locales.join(", "))}`);
   console.info();
   const localesPaths = config.output.locales.map((loc) =>
     config.output.flat ? path.join(config.output.path, `${loc}.po`) : path.join(config.output.path, `${loc}/app.po`),
@@ -29,7 +29,8 @@ try {
 
   await fsPromises.mkdir(config.output.path, { recursive: true });
   const jsonRes = await compilePoFiles(localesPaths);
-  console.info(`${colorize("green", "Compiled json")}: ${colorize("grey", JSON.stringify(jsonRes))}`);
+  const localeCount = Object.keys(jsonRes).length;
+  console.info(`${colorize("green", "Compiled json")}: ${colorize("grey", `${localeCount} locale(s)`)}`);
   console.info();
   if (config.output.splitJson) {
     await Promise.all(
