@@ -71,7 +71,7 @@
     "@types/node": "^24.12.4",
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/test-utils": "^2.4.11",
-    "happy-dom": "^20.9.0",
+    "happy-dom": "^20.10.6",
     "oxfmt": "^0.53.0",
     "oxlint": "^1.68.0",
     "rolldown": "^1.0.3",
