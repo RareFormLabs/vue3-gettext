@@ -71,7 +71,7 @@ const item = computed(() => ({
 </ClientOnly>
 
 </div>
-  
+
 ### Parameters
 
 <div class="section">
