@@ -33,7 +33,7 @@ jobs:
 
       - name: Setup Node
         if: steps.rp.outputs.release_created == 'true'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 20.20.2
           registry-url: "https://registry.npmjs.org"
