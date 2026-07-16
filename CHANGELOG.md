@@ -2,12 +2,11 @@
 
 ## [4.3.2](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.3.1...vue3-gettext-v4.3.2) (2026-07-16)
 
-
 ### Bug Fixes
 
-* **deps:** update dependency @earendil-works/pi-ai to ^0.80.2 ([#162](https://github.com/RareFormLabs/vue3-gettext/issues/162)) ([b996177](https://github.com/RareFormLabs/vue3-gettext/commit/b996177da4b5b0ae5b2314df0bebe166a30fe6b4))
-* **deps:** update dependency @earendil-works/pi-ai to ^0.80.3 ([#164](https://github.com/RareFormLabs/vue3-gettext/issues/164)) ([38f3f66](https://github.com/RareFormLabs/vue3-gettext/commit/38f3f666ec3122a11f689b17536836b2820b5985))
-* **deps:** update dependency @mariozechner/pi-ai to ^0.73.1 ([#111](https://github.com/RareFormLabs/vue3-gettext/issues/111)) ([476cb28](https://github.com/RareFormLabs/vue3-gettext/commit/476cb2829722e6125e626088bbc3e8ef4fed7063))
+- **deps:** update dependency @earendil-works/pi-ai to ^0.80.2 ([#162](https://github.com/RareFormLabs/vue3-gettext/issues/162)) ([b996177](https://github.com/RareFormLabs/vue3-gettext/commit/b996177da4b5b0ae5b2314df0bebe166a30fe6b4))
+- **deps:** update dependency @earendil-works/pi-ai to ^0.80.3 ([#164](https://github.com/RareFormLabs/vue3-gettext/issues/164)) ([38f3f66](https://github.com/RareFormLabs/vue3-gettext/commit/38f3f666ec3122a11f689b17536836b2820b5985))
+- **deps:** update dependency @mariozechner/pi-ai to ^0.73.1 ([#111](https://github.com/RareFormLabs/vue3-gettext/issues/111)) ([476cb28](https://github.com/RareFormLabs/vue3-gettext/commit/476cb2829722e6125e626088bbc3e8ef4fed7063))
 
 ## [4.3.1](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.3.0...vue3-gettext-v4.3.1) (2026-04-20)
 
