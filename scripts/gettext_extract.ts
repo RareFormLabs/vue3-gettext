@@ -7,15 +7,15 @@ import { GettextConfig } from "../src/typeDefs.js";
 import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { loadConfig } from "./config.js";
 import { extractAndCreatePOT } from "./extract.js";
-import { colorize, execShellCommand } from "./utils.js";
+import { colorize, execShellCommand, ShellCommandError } from "./utils.js";
 import PO from "pofile";
 
 const optionDefinitions: OptionDefinition[] = [{ name: "config", alias: "c", type: String }];
-let options;
+let options: {
+  config?: string;
+};
 try {
-  options = commandLineArgs(optionDefinitions) as {
-    config?: string;
-  };
+  options = commandLineArgs(optionDefinitions) as typeof options;
 } catch (e) {
   console.error(e);
   process.exit(1);
@@ -47,7 +47,7 @@ const getFiles = async (config: GettextConfig) => {
   return filesFlat;
 };
 
-(async () => {
+async function main() {
   const config = await loadConfig(options);
   console.info(`Input directory: ${colorize("blue", config.input.path)}`);
   console.info(`Output directory: ${colorize("blue", config.output.path)}`);
@@ -129,4 +129,17 @@ const getFiles = async (config: GettextConfig) => {
     console.info();
     console.info(`${colorize("green", "Created")}: ${colorize("blue", linguasPath)}`);
   }
-})();
+}
+
+main().catch((error) => {
+  if (error instanceof ShellCommandError) {
+    console.error(colorize("red", error.message));
+    const stderr = error.stderr.trim();
+    if (stderr) {
+      console.error(stderr);
+    }
+  } else {
+    console.error(error);
+  }
+  process.exit(1);
+});

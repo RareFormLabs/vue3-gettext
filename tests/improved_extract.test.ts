@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
 import { cwd } from "process";
-import { execSync } from "child_process";
+import { execSync, spawnSync } from "child_process";
 import { describe, it, expect } from "vitest";
 
 describe("Improved Extractor Options Tests", () => {
@@ -158,6 +158,80 @@ msgstr[2] ""
       expect(poContent).toContain('msgstr[0] "One"');
       expect(poContent).toContain('msgstr[1] "Many"');
       expect(poContent).toContain('msgstr[2] "Many"');
+    });
+  });
+
+  it("should exit non-zero and stop after msgmerge fails on duplicate msgid entries", async () => {
+    await withTempDir(async (tmpDir) => {
+      for (const d of ["src", "scripts", "node_modules"]) {
+        await symlink(join(cwd(), d), join(tmpDir, d));
+      }
+      await writeFile(join(tmpDir, "package.json"), JSON.stringify({ name: "test", type: "module" }));
+      await writeFile(
+        join(tmpDir, "gettext.config.js"),
+        `export default {
+          input: { path: './srctest', include: ['*.js'] },
+          output: { path: './srctest/lang', locales: ['en', 'fr'] }
+        };`,
+      );
+
+      await mkdir(join(tmpDir, "srctest", "lang"), { recursive: true });
+      await writeFile(join(tmpDir, "srctest", "test.js"), `$gettext('Hello')`);
+      await writeFile(
+        join(tmpDir, "srctest", "lang", "en.po"),
+        `msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\\n"
+
+msgid "Hello"
+msgstr "Hello"
+
+msgid "Hello"
+msgstr "Bonjour"
+`,
+      );
+
+      const result = spawnSync("npx", ["tsx", "./scripts/gettext_extract.ts"], {
+        cwd: tmpDir,
+        encoding: "utf-8",
+      });
+
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain("msgmerge");
+      expect(result.stderr).toContain("Command failed");
+      expect(result.stdout).not.toContain("Merged");
+      expect(result.stdout).not.toContain("Auto-filled");
+      expect(result.stdout).not.toContain("Created");
+      expect(result.stdout).not.toContain("fr.po");
+    });
+  });
+
+  it("should exit zero for a normal extraction run", async () => {
+    await withTempDir(async (tmpDir) => {
+      for (const d of ["src", "scripts", "node_modules"]) {
+        await symlink(join(cwd(), d), join(tmpDir, d));
+      }
+      await writeFile(join(tmpDir, "package.json"), JSON.stringify({ name: "test", type: "module" }));
+      await writeFile(
+        join(tmpDir, "gettext.config.js"),
+        `export default {
+          input: { path: './srctest', include: ['*.js'] },
+          output: { path: './srctest/lang', locales: ['en'] }
+        };`,
+      );
+
+      await mkdir(join(tmpDir, "srctest", "lang"), { recursive: true });
+      await writeFile(join(tmpDir, "srctest", "test.js"), `$gettext('Hello')`);
+
+      const result = spawnSync("npx", ["tsx", "./scripts/gettext_extract.ts"], {
+        cwd: tmpDir,
+        encoding: "utf-8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stderr).not.toContain("Command failed");
+      expect(result.stdout).toContain("Created");
     });
   });
 });
