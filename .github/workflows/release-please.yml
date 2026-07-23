@@ -3,10 +3,21 @@ name: release-please
 on:
   push:
     branches: [master]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref (tag/sha/branch) to publish"
+        required: true
+        default: "master"
+      dist_tag:
+        description: "npm dist-tag (next or latest). Leave blank to infer from package version"
+        required: false
+        default: ""
 
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
 
 concurrency:
   group: release-please
@@ -18,21 +29,23 @@ jobs:
 
     steps:
       - name: Release Please
+        if: github.event_name == 'push'
         id: rp
         uses: googleapis/release-please-action@v5
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      # If a release was just created, publish to npm from the same workflow run.
-      # This avoids GitHub's limitation where events created by GITHUB_TOKEN (e.g. release creation)
-      # don't trigger additional workflows.
+      # Trusted publishing is bound to this workflow filename, so both the automatic
+      # release path and any manual republish path live here.
       - name: Checkout
-        if: steps.rp.outputs.release_created == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.rp.outputs.release_created == 'true'
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.ref || github.sha }}
 
       - name: Setup Node
-        if: steps.rp.outputs.release_created == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.rp.outputs.release_created == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: 20.20.2
@@ -40,49 +53,38 @@ jobs:
           cache: npm
 
       - name: Install system deps
-        if: steps.rp.outputs.release_created == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.rp.outputs.release_created == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y gettext
 
       - name: Install deps
-        if: steps.rp.outputs.release_created == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.rp.outputs.release_created == 'true'
         run: npm ci
 
       - name: Test
-        if: steps.rp.outputs.release_created == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.rp.outputs.release_created == 'true'
         run: npm test
 
       - name: Build
-        if: steps.rp.outputs.release_created == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.rp.outputs.release_created == 'true'
         run: npm run build
 
       - name: Publish
-        if: steps.rp.outputs.release_created == 'true'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        if: github.event_name == 'workflow_dispatch' || steps.rp.outputs.release_created == 'true'
         run: |
           set -euo pipefail
 
-          TAG_NAME="${{ steps.rp.outputs.tag_name }}"
+          VERSION="$(node -p "require('./package.json').version")"
 
-          # Extract semver version from a tag like:
-          #   vue3-gettext-v4.1.1
-          #   vue3-gettext-v4.1.1-beta.1
-          # We intentionally key off the "-v" delimiter so prerelease identifiers like "dev.1"
-          # (which contain the letter v) don't break parsing.
-          if [[ "$TAG_NAME" =~ -v([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?)$ ]]; then
-            VERSION="${BASH_REMATCH[1]}"
+          # Allow manual overrides, otherwise infer from the package version itself.
+          if [ -n "${{ github.event.inputs.dist_tag }}" ]; then
+            DIST_TAG="${{ github.event.inputs.dist_tag }}"
+          elif [[ "$VERSION" == *-* ]]; then
+            DIST_TAG="next"
           else
-            echo "Could not parse version from tag: $TAG_NAME" >&2
-            exit 1
+            DIST_TAG="latest"
           fi
 
-          # If VERSION contains a prerelease suffix (hyphen), publish to `next`.
-          if [[ "$VERSION" == *-* ]]; then
-            echo "Publishing prerelease $VERSION to dist-tag: next"
-            npm publish --tag next
-          else
-            echo "Publishing release $VERSION to dist-tag: latest"
-            npm publish
-          fi
+          echo "Publishing version $VERSION to dist-tag: $DIST_TAG"
+          npm publish --tag "$DIST_TAG"
