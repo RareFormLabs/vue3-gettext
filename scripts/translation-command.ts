@@ -23,7 +23,6 @@ export type TranslationCommandOptions = TranslateCliOptions & {
   config?: string;
   envFile?: string;
   credentials?: string;
-  baseUrl?: string;
 };
 
 type TranslatorFactory = (options: Parameters<typeof createPiTranslator>[0]) => Promise<Translator>;
@@ -39,6 +38,7 @@ const resolveSelection = (
 ) => {
   const shellProvider = process.env.VUE_GETTEXT_PROVIDER;
   const shellModel = process.env.VUE_GETTEXT_MODEL;
+  const shellBaseUrl = process.env.VUE_GETTEXT_BASE_URL;
   loadLocalEnvironment({ configPath, envFile: options.envFile });
 
   return resolveModelSelection({
@@ -47,9 +47,10 @@ const resolveSelection = (
     cliBaseUrl: options.baseUrl,
     shellProvider,
     shellModel,
+    shellBaseUrl,
     environmentProvider: shellProvider || shellModel ? undefined : process.env.VUE_GETTEXT_PROVIDER,
     environmentModel: shellProvider || shellModel ? undefined : process.env.VUE_GETTEXT_MODEL,
-    environmentBaseUrl: process.env.VUE_GETTEXT_BASE_URL,
+    environmentBaseUrl: shellProvider || shellModel ? undefined : process.env.VUE_GETTEXT_BASE_URL,
     configModel,
   });
 };
@@ -66,6 +67,12 @@ export const runTranslationCommand = async (
     : config.translate.locales?.length
       ? config.translate.locales
       : config.output.locales;
+  const targets = targetLocales.map((locale) => ({ locale, poFilePath: getPoFilePath(config, locale) }));
+  for (const { locale, poFilePath } of targets) {
+    if (!existsSync(poFilePath)) {
+      throw new Error(`PO file not found for locale ${locale}: ${poFilePath}. Run extraction first.`);
+    }
+  }
   const credentials = new FileCredentialStore(resolveCredentialsPath(options.credentials));
   const translator = await createTranslator({ selection, credentials });
 
@@ -77,12 +84,7 @@ export const runTranslationCommand = async (
   console.info(`Mode: ${chalk.blueBright(includeTranslated ? "all entries" : "untranslated only")}`);
   console.info();
 
-  for (const locale of targetLocales) {
-    const poFilePath = getPoFilePath(config, locale);
-    if (!existsSync(poFilePath)) {
-      throw new Error(`PO file not found for locale ${locale}: ${poFilePath}. Run extraction first.`);
-    }
-
+  for (const { locale, poFilePath } of targets) {
     const po = await loadPoFile(poFilePath);
     const entries = collectTranslationEntries(po, includeTranslated);
     if (entries.length === 0) {

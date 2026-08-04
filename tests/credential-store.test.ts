@@ -44,8 +44,21 @@ describe("FileCredentialStore", () => {
 
     const parsed = JSON.parse(await readFile(filePath, "utf8"));
     expect(Object.keys(parsed).sort()).toEqual(["anthropic", "openai"]);
-    expect((await stat(path.dirname(filePath))).mode & 0o777).toBe(0o700);
-    expect((await stat(filePath)).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") {
+      expect((await stat(path.dirname(filePath))).mode & 0o777).toBe(0o700);
+      expect((await stat(filePath)).mode & 0o777).toBe(0o600);
+    }
+  });
+
+  it("leaves a credential unchanged when modify returns undefined", async () => {
+    const store = new FileCredentialStore(filePath);
+    await store.modify("anthropic", async () => ({ type: "api_key", key: "original" }));
+
+    await expect(store.modify("anthropic", async () => undefined)).resolves.toEqual({
+      type: "api_key",
+      key: "original",
+    });
+    await expect(store.read("anthropic")).resolves.toEqual({ type: "api_key", key: "original" });
   });
 
   it("deletes one provider without disturbing others", async () => {

@@ -1,7 +1,12 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { loadLocalEnvironment, resolveLocalEnvPath, resolveModelSelection } from "../scripts/environment.js";
+import {
+  expandHomePath,
+  loadLocalEnvironment,
+  resolveLocalEnvPath,
+  resolveModelSelection,
+} from "../scripts/environment.js";
 
 describe("translation environment", () => {
   it("resolves complete model pairs by layer without mixing them", () => {
@@ -47,10 +52,38 @@ describe("translation environment", () => {
     });
   });
 
-  it("resolves the automatic env file beside the config and tolerates a missing file", () => {
-    const configPath = path.join(os.tmpdir(), "nested", "gettext.config.js");
-    expect(resolveLocalEnvPath({ configPath })).toBe(path.join(os.tmpdir(), "nested", ".env.gettext"));
-    expect(loadLocalEnvironment({ configPath })).toBeUndefined();
+  it("keeps shell and local-file base URLs in their own selection layers", () => {
+    expect(
+      resolveModelSelection({
+        shellProvider: "anthropic",
+        shellModel: "claude-test",
+        shellBaseUrl: "https://shell.example/v1",
+        environmentProvider: "openai",
+        environmentModel: "gpt-test",
+        environmentBaseUrl: "https://local.example/v1",
+      }),
+    ).toMatchObject({
+      provider: "anthropic",
+      id: "claude-test",
+      baseUrl: "https://shell.example/v1",
+      source: "environment",
+    });
+  });
+
+  it("resolves the automatic env file beside the config and tolerates a missing file", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "vue-gettext-missing-env-"));
+    const configPath = path.join(tempDir, "nested", "gettext.config.js");
+    try {
+      expect(resolveLocalEnvPath({ configPath })).toBe(path.join(tempDir, "nested", ".env.gettext"));
+      expect(loadLocalEnvironment({ configPath })).toBeUndefined();
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("expands home paths written with either slash style", () => {
+    expect(expandHomePath("~/credentials/auth.json")).toBe(path.join(os.homedir(), "credentials", "auth.json"));
+    expect(expandHomePath("~\\credentials\\auth.json")).toBe(path.join(os.homedir(), "credentials", "auth.json"));
   });
 
   it("loads an explicit env file without replacing existing shell values", async () => {

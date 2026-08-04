@@ -8,6 +8,7 @@ import { createInterface } from "node:readline/promises";
 import { loadConfig } from "./config.js";
 import { FileCredentialStore } from "./credential-store.js";
 import { loadLocalEnvironment, resolveCredentialsPath, resolveModelSelection } from "./environment.js";
+import { processSecretInputChunk } from "./secret-input.js";
 
 const optionDefinitions: OptionDefinition[] = [
   { name: "positionals", defaultOption: true, type: String, multiple: true },
@@ -35,7 +36,10 @@ const promptHidden = (message: string, signal?: AbortSignal) => {
 
   return new Promise<string>((resolve, reject) => {
     let value = "";
+    let finished = false;
     const finish = (error?: unknown) => {
+      if (finished) return;
+      finished = true;
       stdin.off("data", onData);
       signal?.removeEventListener("abort", onAbort);
       stdin.setRawMode(false);
@@ -49,24 +53,16 @@ const promptHidden = (message: string, signal?: AbortSignal) => {
     };
     const onAbort = () => finish(signal?.reason || new Error("Prompt aborted."));
     const onData = (chunk: Buffer) => {
-      const input = chunk.toString("utf8");
-      if (input === "\u0003") {
+      const result = processSecretInputChunk(value, chunk.toString("utf8"));
+      value = result.value;
+      stdout.write(result.output);
+      if (result.action === "cancel") {
         finish(new Error("Login cancelled."));
         return;
       }
-      if (input === "\r" || input === "\n") {
+      if (result.action === "submit") {
         finish();
-        return;
       }
-      if (input === "\u007f") {
-        if (value.length > 0) {
-          value = value.slice(0, -1);
-          stdout.write("\b \b");
-        }
-        return;
-      }
-      value += input;
-      stdout.write("*");
     };
 
     stdout.write(`${message}: `);
@@ -168,11 +164,14 @@ const run = async (options: CliOptions) => {
   const [command, positionalProvider, ...extra] = options.positionals || [];
   if (!command || extra.length > 0 || !["login", "logout", "list"].includes(command)) {
     throw new Error(
-      "Usage: vue-gettext-auth <login|logout|list> [provider] [--type api-key|oauth] [--credentials path]",
+      "Usage: vue-gettext-auth <login|logout|list> [provider] [--type api-key|oauth] [--config path] [--env-file path] [--credentials path]",
     );
   }
   if (command === "list" && positionalProvider) {
-    throw new Error("Usage: vue-gettext-auth list [--credentials path]");
+    throw new Error("Usage: vue-gettext-auth list [--config path] [--env-file path] [--credentials path]");
+  }
+  if (command !== "login" && options.type) {
+    throw new Error("--type is only valid with vue-gettext-auth login.");
   }
 
   const shellProvider = process.env.VUE_GETTEXT_PROVIDER;
@@ -191,15 +190,25 @@ const run = async (options: CliOptions) => {
     return;
   }
 
-  const providerId =
-    positionalProvider ||
-    resolveModelSelection({
-      shellProvider,
-      shellModel,
-      environmentProvider: shellProvider || shellModel ? undefined : process.env.VUE_GETTEXT_PROVIDER,
-      environmentModel: shellProvider || shellModel ? undefined : process.env.VUE_GETTEXT_MODEL,
-      configModel: config.translate.model,
-    }).provider;
+  let providerId = positionalProvider;
+  if (!providerId) {
+    try {
+      providerId = resolveModelSelection({
+        shellProvider,
+        shellModel,
+        environmentProvider: shellProvider || shellModel ? undefined : process.env.VUE_GETTEXT_PROVIDER,
+        environmentModel: shellProvider || shellModel ? undefined : process.env.VUE_GETTEXT_MODEL,
+        configModel: config.translate.model,
+      }).provider;
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("No translation provider and model are configured.")) {
+        throw new Error(
+          "No authentication provider is configured. Pass [provider], set VUE_GETTEXT_PROVIDER and VUE_GETTEXT_MODEL together, or configure translate.model.",
+        );
+      }
+      throw error;
+    }
+  }
   const models = builtinModels({ credentials });
 
   if (command === "logout") {

@@ -2,7 +2,7 @@ import {
   Type,
   validateToolCall,
   type Api,
-  type AuthCheck,
+  type AuthContext,
   type Model,
   type Models,
   type MutableModels,
@@ -14,6 +14,7 @@ import type { FileCredentialStore } from "./credential-store.js";
 import type { TranslationEntry, TranslationResult, Translator, TranslatorRequest } from "./translate.js";
 
 const TRANSLATION_TOOL_NAME = "submit_translations";
+const TRANSLATION_TIMEOUT_MS = 10 * 60 * 1000;
 
 const translationTool: Tool = {
   name: TRANSLATION_TOOL_NAME,
@@ -109,34 +110,46 @@ export class PiTranslator implements Translator {
   ) {}
 
   async translate(request: TranslatorRequest): Promise<TranslationResult[]> {
-    const response = await this.models.completeSimple(this.model, {
-      systemPrompt: buildSystemPrompt(request.locale),
-      messages: [{ role: "user", content: buildUserPrompt(request), timestamp: Date.now() }],
-      tools: [translationTool],
-    });
+    const response = await this.models.completeSimple(
+      this.model,
+      {
+        systemPrompt: buildSystemPrompt(request.locale),
+        messages: [{ role: "user", content: buildUserPrompt(request), timestamp: Date.now() }],
+        tools: [translationTool],
+      },
+      { signal: AbortSignal.timeout(TRANSLATION_TIMEOUT_MS) },
+    );
 
-    if (response.stopReason === "error" || response.stopReason === "aborted") {
-      throw new Error(response.errorMessage || `Translation request ${response.stopReason}.`);
+    if (response.stopReason !== "stop" && response.stopReason !== "toolUse") {
+      const detail = response.errorMessage ? ` ${response.errorMessage}` : "";
+      throw new Error(`Translation request stopped with reason ${response.stopReason}.${detail}`);
     }
     const toolCalls = response.content.filter((block) => block.type === "toolCall");
     if (toolCalls.length !== 1 || toolCalls[0].name !== TRANSLATION_TOOL_NAME) {
       throw new Error(`The model must call ${TRANSLATION_TOOL_NAME} exactly once.`);
     }
 
-    const translations = validateTranslations(request, toolCalls[0].arguments);
     validateToolCall([translationTool], toolCalls[0]);
-    return translations;
+    // pi-ai converts schema values during validation. Validate the raw arguments too
+    // so values such as a string msgstr cannot be silently coerced to an array.
+    return validateTranslations(request, toolCalls[0].arguments);
   }
 }
 
 type CreatePiTranslatorOptions = {
   selection: TranslationModelConfig;
   credentials: FileCredentialStore;
+  createEnvironmentModels?: () => MutableModels;
   createAmbientModels?: () => MutableModels;
   createStoredModels?: (credentials: FileCredentialStore) => MutableModels;
 };
 
 const refreshModels = async (models: MutableModels, provider: string) => {
+  for (const entry of models.getProviders()) {
+    if (entry.id !== provider) {
+      models.deleteProvider(entry.id);
+    }
+  }
   const result = await models.refresh();
   const error = result.errors.get(provider);
   if (error) {
@@ -144,32 +157,48 @@ const refreshModels = async (models: MutableModels, provider: string) => {
   }
 };
 
-const isExplicitEnvironmentAuth = (auth: AuthCheck | undefined) => {
-  if (!auth?.source) {
-    return false;
+const AMBIENT_AUTH_ENVIRONMENT_VARIABLES = new Set([
+  "AWS_PROFILE",
+  "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI",
+  "AWS_CONTAINER_CREDENTIALS_FULL_URI",
+  "AWS_WEB_IDENTITY_TOKEN_FILE",
+  "GOOGLE_APPLICATION_CREDENTIALS",
+]);
+
+export const explicitEnvironmentAuthContext: AuthContext = {
+  env: async (name) => (AMBIENT_AUTH_ENVIRONMENT_VARIABLES.has(name) ? undefined : process.env[name]),
+  fileExists: async () => false,
+};
+
+const validateBaseUrl = (value: string | undefined) => {
+  if (!value) return undefined;
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error(`Invalid model base URL: ${value}`);
   }
-  if (
-    ["AWS_PROFILE", "ECS task role", "web identity token", "gcloud application default credentials"].includes(
-      auth.source,
-    ) ||
-    auth.source.startsWith("~/.aws/")
-  ) {
-    return false;
-  }
-  if (process.env[auth.source]) {
-    return true;
-  }
-  return (
-    auth.source === "AWS access keys" && Boolean(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY)
-  );
+  if (parsed.protocol === "https:") return value;
+
+  const hostname = parsed.hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  const isLoopback =
+    hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
+    hostname === "::1" ||
+    /^127(?:\.\d{1,3}){3}$/.test(hostname);
+  if (parsed.protocol === "http:" && isLoopback) return value;
+  throw new Error("Model base URL must use HTTPS, except for HTTP loopback addresses such as localhost.");
 };
 
 export const createPiTranslator = async ({
   selection,
   credentials,
+  createEnvironmentModels = () => builtinModels({ authContext: explicitEnvironmentAuthContext }),
   createAmbientModels = () => builtinModels(),
   createStoredModels = (store) => builtinModels({ credentials: store }),
 }: CreatePiTranslatorOptions) => {
+  const baseUrl = validateBaseUrl(selection.baseUrl);
+  const environmentModels = createEnvironmentModels();
   const ambientModels = createAmbientModels();
   const storedModels = createStoredModels(credentials);
   const provider = ambientModels.getProvider(selection.provider);
@@ -182,9 +211,9 @@ export const createPiTranslator = async ({
     throw new Error(`Unknown translation provider: ${selection.provider}. Available providers: ${available}`);
   }
 
-  const ambientAuth = await ambientModels.checkAuth(selection.provider);
+  const environmentAuth = await environmentModels.checkAuth(selection.provider);
   const savedCredential = await credentials.read(selection.provider);
-  const models = isExplicitEnvironmentAuth(ambientAuth) || !savedCredential ? ambientModels : storedModels;
+  const models = environmentAuth ? environmentModels : savedCredential ? storedModels : ambientModels;
   await refreshModels(models, selection.provider);
   const resolvedModel = models.getModel(selection.provider, selection.id);
   if (!resolvedModel) {
@@ -197,6 +226,6 @@ export const createPiTranslator = async ({
     throw new Error(`Unknown model ${selection.id} for provider ${selection.provider}.${suffix}`);
   }
 
-  const model = selection.baseUrl ? { ...resolvedModel, baseUrl: selection.baseUrl } : resolvedModel;
+  const model = baseUrl ? { ...resolvedModel, baseUrl } : resolvedModel;
   return new PiTranslator(models, model);
 };

@@ -38,4 +38,31 @@ describe("vue-gettext-auth CLI", () => {
       await rm(tempDir, { recursive: true, force: true });
     }
   });
+
+  it("rejects login-only options on other commands and gives auth-specific provider guidance", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "vue-gettext-auth-errors-"));
+    const configPath = path.join(tempDir, "gettext.config.mjs");
+    const credentialsPath = path.join(tempDir, "credentials", "auth.json");
+    const scriptPath = path.resolve("scripts/gettext_auth.ts");
+    await writeFile(configPath, "export default {};\n");
+    const run = (args: string[]) =>
+      spawnSync(process.execPath, ["--import", "tsx", scriptPath, ...args], {
+        cwd: process.cwd(),
+        encoding: "utf8",
+        env: { ...process.env, VUE_GETTEXT_PROVIDER: "", VUE_GETTEXT_MODEL: "" },
+      });
+
+    try {
+      const invalidType = run(["list", "--type", "oauth", "--config", configPath]);
+      expect(invalidType.status).toBe(1);
+      expect(invalidType.stderr).toContain("--type is only valid");
+
+      const missingProvider = run(["logout", "--config", configPath, "--credentials", credentialsPath]);
+      expect(missingProvider.status).toBe(1);
+      expect(missingProvider.stderr).toContain("No authentication provider is configured");
+      expect(missingProvider.stderr).not.toContain("Pass --provider and --model");
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
 });

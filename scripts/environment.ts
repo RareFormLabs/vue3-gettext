@@ -20,6 +20,7 @@ export type ModelSelectionOptions = {
   cliBaseUrl?: string;
   shellProvider?: string;
   shellModel?: string;
+  shellBaseUrl?: string;
   environmentProvider?: string;
   environmentModel?: string;
   environmentBaseUrl?: string;
@@ -61,7 +62,7 @@ export const resolveModelSelection = (options: ModelSelectionOptions): ModelSele
     return cli;
   }
 
-  const shell = resolvePair(options.shellProvider, options.shellModel, "environment", options.environmentBaseUrl);
+  const shell = resolvePair(options.shellProvider, options.shellModel, "environment", options.shellBaseUrl);
   if (shell) {
     return { ...shell, baseUrl: normalizeValue(options.cliBaseUrl) || shell.baseUrl };
   }
@@ -97,8 +98,8 @@ export const expandHomePath = (value: string) => {
   if (value === "~") {
     return os.homedir();
   }
-  if (value.startsWith(`~${path.sep}`)) {
-    return path.join(os.homedir(), value.slice(2));
+  if (/^~[\\/]/.test(value)) {
+    return path.join(os.homedir(), ...value.slice(2).split(/[\\/]+/));
   }
   return value;
 };
