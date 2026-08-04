@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.3.3](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.3.2...vue3-gettext-v4.3.3) (2026-08-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @earendil-works/pi-ai to ^0.80.6 ([#176](https://github.com/RareFormLabs/vue3-gettext/issues/176)) ([0a2f2ee](https://github.com/RareFormLabs/vue3-gettext/commit/0a2f2eeccb6af07fd227ac0f021ce8e06409f1a8))
+* **deps:** update dependency @earendil-works/pi-ai to ^0.80.7 ([#185](https://github.com/RareFormLabs/vue3-gettext/issues/185)) ([efdfae0](https://github.com/RareFormLabs/vue3-gettext/commit/efdfae069bd8f882da20258c5253f4d3143f303b))
+* **deps:** update dependency @earendil-works/pi-ai to ^0.82.1 ([#189](https://github.com/RareFormLabs/vue3-gettext/issues/189)) ([071ea5a](https://github.com/RareFormLabs/vue3-gettext/commit/071ea5a0385d4d354ac466d72c7baade981dd250))
+* **deps:** update dependency chalk to v6 ([#193](https://github.com/RareFormLabs/vue3-gettext/issues/193)) ([e5bd491](https://github.com/RareFormLabs/vue3-gettext/commit/e5bd4914d56c155c94ff80fd4a8a46f9e377d97b))
+
 ## [4.3.2](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.3.1...vue3-gettext-v4.3.2) (2026-07-16)
 
 ### Bug Fixes
