@@ -1,1 +1,0 @@
-import{_ as t,o as a,c as e,a1 as i}from"./chunks/framework.DgP5bos8.js";const u=JSON.parse('{"title":"Setup","description":"","frontmatter":{},"headers":[],"relativePath":"setup.md","filePath":"setup.md"}'),n={name:"setup.md"};function l(p,s,r,h,o,d){return a(),e("div",null,[...s[0]||(s[0]=[i("",12)])])}const c=t(n,[["render",l]]);export{u as __pageData,c as default};
