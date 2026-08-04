@@ -2,7 +2,49 @@ import { lilconfig } from "lilconfig";
 import path from "node:path";
 import { GettextConfig, GettextConfigOptions } from "../src/typeDefs.js";
 
-export const loadConfig = async (cliArgs?: { config?: string }): Promise<GettextConfig> => {
+export type LoadedGettextConfig = GettextConfig & {
+  configPath?: string;
+};
+
+const legacyTranslateConfigError = () =>
+  new Error(
+    [
+      "The v4 translation configuration is not supported in vue3-gettext v5.",
+      'Replace translate.provider and the string translate.model with translate.model: { provider: "openai", id: "gpt-4.1-mini" }.',
+      'For ChatGPT/Codex OAuth use provider: "openai-codex", then run vue-gettext-auth login openai-codex --type oauth.',
+    ].join(" "),
+  );
+
+const validateTranslateConfig = (translate: unknown) => {
+  if (!translate || typeof translate !== "object") {
+    return;
+  }
+
+  const value = translate as Record<string, unknown>;
+  if ("provider" in value || "openai" in value || typeof value.model === "string") {
+    throw legacyTranslateConfigError();
+  }
+
+  if (value.model !== undefined) {
+    if (!value.model || typeof value.model !== "object") {
+      throw new Error("translate.model must be an object with non-empty provider and id strings.");
+    }
+    const model = value.model as Record<string, unknown>;
+    if (
+      typeof model.provider !== "string" ||
+      model.provider.trim().length === 0 ||
+      typeof model.id !== "string" ||
+      model.id.trim().length === 0
+    ) {
+      throw new Error("translate.model must include non-empty provider and id strings.");
+    }
+    if (model.baseUrl !== undefined && typeof model.baseUrl !== "string") {
+      throw new Error("translate.model.baseUrl must be a string when provided.");
+    }
+  }
+};
+
+export const loadConfig = async (cliArgs?: { config?: string }): Promise<LoadedGettextConfig> => {
   const configSearcher = lilconfig("gettext", {
     searchPlaces: ["gettext.config.js", "gettext.config.cjs", "gettext.config.mjs", "package.json"],
   });
@@ -18,6 +60,7 @@ export const loadConfig = async (cliArgs?: { config?: string }): Promise<Gettext
   }
 
   const config: GettextConfigOptions = configRes?.config ?? {};
+  validateTranslateConfig(config.translate);
 
   const languagePath = config.output?.path || "./src/language";
   const joinPath = (inputPath: string) => path.join(languagePath, inputPath);
@@ -50,11 +93,16 @@ export const loadConfig = async (cliArgs?: { config?: string }): Promise<Gettext
       autoFill: config.output?.autoFill,
     },
     translate: {
-      provider: config.translate?.provider || "openai",
-      model: config.translate?.model || config.translate?.openai?.model || "gpt-4.1-mini",
+      model: config.translate?.model
+        ? {
+            provider: config.translate.model.provider.trim(),
+            id: config.translate.model.id.trim(),
+            baseUrl: config.translate.model.baseUrl?.trim() || undefined,
+          }
+        : undefined,
       locales: config.translate?.locales,
       includeTranslated: config.translate?.includeTranslated === undefined ? false : config.translate.includeTranslated,
-      openai: config.translate?.openai,
     },
+    configPath: configRes?.filepath,
   };
 };

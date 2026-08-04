@@ -132,11 +132,12 @@ export default {
             locales: ['fr'],
           },
           translate: {
-            model: 'gpt-4.1',
-            locales: ['fr', 'de'],
-            openai: {
-              apiKeyEnvVar: 'CUSTOM_OPENAI_KEY',
+            model: {
+              provider: 'anthropic',
+              id: 'claude-sonnet-4-5',
+              baseUrl: 'https://example.test',
             },
+            locales: ['fr', 'de'],
           },
         };`,
       );
@@ -145,11 +146,32 @@ export default {
       process.chdir(tmpDir);
       try {
         const config = await loadConfig();
-        expect(config.translate.provider).toBe("openai");
-        expect(config.translate.model).toBe("gpt-4.1");
+        expect(config.translate.model).toEqual({
+          provider: "anthropic",
+          id: "claude-sonnet-4-5",
+          baseUrl: "https://example.test",
+        });
         expect(config.translate.includeTranslated).toBe(false);
         expect(config.translate.locales).toEqual(["fr", "de"]);
-        expect(config.translate.openai?.apiKeyEnvVar).toBe("CUSTOM_OPENAI_KEY");
+        expect(config.configPath).toMatch(/gettext\.config\.js$/);
+      } finally {
+        process.chdir(previousCwd);
+      }
+    });
+  });
+
+  it("rejects the v4 translation config with migration guidance", async () => {
+    await withTempDir(async (tmpDir) => {
+      await writeFile(join(tmpDir, "package.json"), JSON.stringify({ type: "module" }));
+      await writeFile(
+        join(tmpDir, "gettext.config.js"),
+        `export default { translate: { provider: 'openai', model: 'gpt-4.1-mini', openai: {} } };`,
+      );
+
+      const previousCwd = process.cwd();
+      process.chdir(tmpDir);
+      try {
+        await expect(loadConfig()).rejects.toThrow("translate.model: { provider");
       } finally {
         process.chdir(previousCwd);
       }

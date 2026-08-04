@@ -38,6 +38,7 @@ export type TranslateCliOptions = {
   locale?: string[];
   provider?: string;
   model?: string;
+  baseUrl?: string;
   includeTranslated?: boolean;
   dryRun?: boolean;
 };

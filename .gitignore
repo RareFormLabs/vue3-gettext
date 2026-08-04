@@ -18,3 +18,4 @@ yarn.lock
 
 docs/.vitepress/cache
 .npmrc
+.env.gettext

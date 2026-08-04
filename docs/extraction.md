@@ -84,24 +84,14 @@ const config = {
     autoFill: false,
   },
   translate: {
-    provider: "openai",
-    model: "gpt-4.1-mini", // default model used for translation requests
+    // Optional repository fallback. Developers can override this pair locally.
+    model: {
+      provider: "openai",
+      id: "gpt-4.1-mini",
+      baseUrl: undefined, // optional endpoint override
+    },
     locales: undefined, // defaults to output.locales
     includeTranslated: false, // when true, retranslate entries that already have msgstr values
-    openai: {
-      authMode: "api-key", // "api-key" for normal OpenAI API, or "oauth" for ChatGPT/Codex OAuth
-      apiKeyEnvVar: "OPENAI_API_KEY", // env var to read in api-key mode
-      credentialsPath: undefined, // oauth mode; defaults to ~/.vue-gettext/openai-codex-oauth.json
-      accessTokenEnvVar: "OPENAI_OAUTH_ACCESS_TOKEN", // optional oauth env override instead of credentialsPath
-      refreshTokenEnvVar: "OPENAI_OAUTH_REFRESH_TOKEN", // optional oauth env override instead of credentialsPath
-      accountIdEnvVar: "OPENAI_OAUTH_ACCOUNT_ID", // optional oauth env override; usually derivable from token
-      persistRefresh: true, // oauth mode; write refreshed tokens back to credentialsPath
-      baseUrl: undefined, // optional advanced override; normally leave unset unless targeting a compatible endpoint
-      model: undefined, // optional provider-specific override; falls back to translate.model
-      organization: undefined, // api-key mode only; optional OpenAI organization header
-      project: undefined, // api-key mode only; optional OpenAI project header
-      originator: undefined, // oauth mode only; advanced header override if your environment requires a non-default originator
-    },
   },
 };
 export default config;
@@ -127,34 +117,88 @@ Keep extraction, translation, and compilation as separate steps:
 
 ```bash
 npm run gettext:extract
-OPENAI_API_KEY=your-key npm run gettext:translate
+npm run gettext:translate
 npm run gettext:compile
 ```
 
-OAuth workflow:
+The checked-in `translate.model` is an optional fallback. To choose a model per developer, add `.env.gettext` to `.gitignore` and create it beside `gettext.config.js`:
 
-```bash
-npx vue-gettext-openai-login
-npm run gettext:translate
+```dotenv
+VUE_GETTEXT_PROVIDER=anthropic
+VUE_GETTEXT_MODEL=claude-sonnet-4-5
+ANTHROPIC_API_KEY=your-key
+
+# Optional
+# VUE_GETTEXT_BASE_URL=http://localhost:11434/v1
+# VUE_GETTEXT_CREDENTIALS_PATH=~/.vue-gettext/auth.json
 ```
 
-What the OAuth-specific options mean:
+Use restrictive permissions such as `chmod 600 .env.gettext` if the file contains secrets. The translator warns if an automatically discovered file appears to be tracked by Git.
 
-- `credentialsPath`: where the saved OAuth credentials JSON lives
-- `persistRefresh`: whether refreshed access tokens should be written back to that file
-- `baseUrl`: advanced override for the HTTP endpoint; leave unset unless you know you need a custom compatible endpoint
-- `originator`: advanced OAuth header override; most users should leave this unset
+The provider and model are atomic at every layer. They resolve in this order:
+
+1. `--provider` and `--model`
+2. Existing `VUE_GETTEXT_PROVIDER` and `VUE_GETTEXT_MODEL` shell variables
+3. An explicit `--env-file`, or `.env.gettext` beside the selected config
+4. The optional `translate.model` repository fallback
+
+Setting only one value is an error; the translator never combines values from different layers. Existing shell variables win over values loaded from a local file. An explicit environment file must exist and replaces automatic discovery.
+
+The local file may contain the model pair, `VUE_GETTEXT_BASE_URL`, `VUE_GETTEXT_CREDENTIALS_PATH`, and any standard pi-ai provider credentials, including `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, AWS variables, and Google or Cloudflare configuration.
+
+API-key examples:
+
+```bash
+ANTHROPIC_API_KEY=your-key npx vue-gettext-translate \
+  --provider anthropic --model claude-sonnet-4-5
+
+OPENAI_API_KEY=your-key npx vue-gettext-translate \
+  --provider openai --model gpt-4.1-mini
+```
+
+CI can set `VUE_GETTEXT_PROVIDER`, `VUE_GETTEXT_MODEL`, and the provider's credentials as protected environment variables instead of creating a local file.
+
+All built-in, tool-capable pi-ai text providers use the same translation path. Provider output is validated before any PO file changes are written.
+
+Authentication precedence is explicit provider environment credentials, a saved provider credential, then other pi-ai ambient authentication such as AWS profiles or Google ADC. Manage saved credentials with:
+
+```bash
+npx vue-gettext-auth login anthropic --type api-key
+npx vue-gettext-auth login anthropic --type oauth
+npx vue-gettext-auth login openai-codex --type oauth
+npx vue-gettext-auth list
+npx vue-gettext-auth logout anthropic
+```
+
+The store defaults to `~/.vue-gettext/auth.json`; only `VUE_GETTEXT_CREDENTIALS_PATH` and `--credentials` override it. Writes use cross-process locking and atomic replacement. Store directories are created with mode `0700` and files with mode `0600`. Credential values and local environment values are never printed.
 
 The translator reads your existing PO files, sends only untranslated entries by default, preserves `msgctxt` and `msgid_plural`, and writes the returned `msgstr` values back into the PO files.
 
 CLI flags:
 
 - `--config, -c` custom gettext config path
+- `--env-file` custom local environment file; disables automatic discovery
+- `--credentials` custom provider credential store path
 - `--locale, -l` restrict translation to one or more locales
-- `--provider` provider name, currently `openai`
-- `--model` override the configured model
+- `--provider` provider ID; must be supplied with `--model`
+- `--model` model ID; must be supplied with `--provider`
+- `--base-url` override the selected model endpoint
 - `--include-translated` retranslate entries that already have `msgstr` values
 - `--dry-run` call the provider without writing files
+
+## Migrating from v4
+
+v5 requires Node 22.19 or newer. It rejects `translate.provider`, string-valued `translate.model`, and `translate.openai` and prints a migration example.
+
+| v4                                | v5                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------- |
+| `translate.provider: "openai"`    | `translate.model.provider: "openai"`                                            |
+| `translate.model: "gpt-4.1-mini"` | `translate.model.id: "gpt-4.1-mini"`                                            |
+| OpenAI API billing                | Provider `openai` plus `OPENAI_API_KEY`                                         |
+| ChatGPT/Codex OAuth               | Provider `openai-codex` plus `vue-gettext-auth login openai-codex --type oauth` |
+| `vue-gettext-openai-login`        | `vue-gettext-auth login [provider] --type api-key\|oauth`                       |
+
+Keep workflow settings such as `locales` and `includeTranslated` in repository configuration. Provider, model, endpoint, credential path, and credentials may all remain local to each developer or CI job.
 
 ## Gotchas
 

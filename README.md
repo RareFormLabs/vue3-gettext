@@ -80,89 +80,41 @@ export default {
     autoFill: ["en"],
   },
   translate: {
-    provider: "openai",
-    model: "gpt-4.1-mini", // default translation model
+    // Optional repository fallback. Each developer can override this pair locally.
+    model: {
+      provider: "openai",
+      id: "gpt-4.1-mini",
+    },
     // optional: limit translation to specific locales instead of output.locales
     locales: ["es"],
     // default false: only fill missing entries; true means retranslate existing msgstr values too
     includeTranslated: false,
-    openai: {
-      /**
-       * Default: "api-key"
-       * - "api-key" uses https://api.openai.com/v1/chat/completions
-       * - "oauth" uses ChatGPT/Codex OAuth via @earendil-works/pi-ai and https://chatgpt.com/backend-api/codex/responses
-       */
-      authMode: "api-key",
-      // optional override, defaults to OPENAI_API_KEY
-      apiKeyEnvVar: "OPENAI_API_KEY",
-      // advanced: override the API base URL; normally leave unset
-      baseUrl: undefined,
-    },
   },
 };
 ```
 
-OAuth mode example:
+The checked-in model is only a fallback. Add `.env.gettext` to your project's `.gitignore`, then each developer can select their own provider and model beside `gettext.config.js`:
 
-```js
-export default {
-  translate: {
-    provider: "openai",
-    model: "gpt-5.4",
-    includeTranslated: false,
-    openai: {
-      authMode: "oauth",
-      // where vue-gettext reads/writes saved OAuth credentials
-      // defaults to ~/.vue-gettext/openai-codex-oauth.json
-      credentialsPath: "./.gettext/openai-codex-oauth.json",
-      // SECURITY WARNING: Do not commit OAuth credentials to version control!
-      // 1. Add credentialsPath to .gitignore (e.g., echo ".gettext/" >> .gitignore)
-      // 2. Restrict file permissions (e.g., chmod 600 ./.gettext/openai-codex-oauth.json)
-      // 3. Consider using env var overrides below to avoid storing tokens on disk
-      // optional env overrides if you do not want a file
-      accessTokenEnvVar: "OPENAI_OAUTH_ACCESS_TOKEN",
-      refreshTokenEnvVar: "OPENAI_OAUTH_REFRESH_TOKEN",
-      accountIdEnvVar: "OPENAI_OAUTH_ACCOUNT_ID",
-      // if a refresh occurs, save the updated credentials back to credentialsPath
-      persistRefresh: true,
-      // advanced: override the backend endpoint; normally leave unset
-      baseUrl: undefined,
-      // advanced: override the OAuth originator header only if your environment needs it
-      originator: undefined,
-    },
-  },
-};
+```dotenv
+VUE_GETTEXT_PROVIDER=anthropic
+VUE_GETTEXT_MODEL=claude-sonnet-4-5
+ANTHROPIC_API_KEY=your-key
+
+# Optional model endpoint override
+# VUE_GETTEXT_BASE_URL=http://localhost:11434/v1
+
+# Optional; defaults to ~/.vue-gettext/auth.json
+# VUE_GETTEXT_CREDENTIALS_PATH=~/.vue-gettext/auth.json
 ```
 
-Credential file formats accepted in OAuth mode:
+`VUE_GETTEXT_PROVIDER` and `VUE_GETTEXT_MODEL` are an atomic pair. They are never mixed with values from another layer. Selection precedence is:
 
-**SECURITY WARNING**: Do not commit OAuth credentials to version control!
+1. `--provider` and `--model`
+2. Existing shell or CI environment variables
+3. `--env-file <path>`, or `.env.gettext` beside the selected config file
+4. The optional checked-in `translate.model` fallback
 
-- Add the credentials file to `.gitignore` (e.g., `echo ".gettext/" >> .gitignore`)
-- Restrict file permissions (e.g., `chmod 600 ./.gettext/openai-codex-oauth.json`)
-- Alternative: Use environment variable overrides (`accessTokenEnvVar`, `refreshTokenEnvVar`, `accountIdEnvVar`) to avoid storing tokens on disk
-
-```json
-{
-  "access": "<token>",
-  "refresh": "<token>",
-  "expires": 1760000000000,
-  "accountId": "user-123"
-}
-```
-
-or:
-
-```json
-{
-  "openai-codex": {
-    "access": "<token>",
-    "refresh": "<token>",
-    "expires": 1760000000000,
-    "accountId": "user-123"
-  }
-}
-```
+If either value is present at a layer, both are required. An explicit `--env-file` replaces automatic discovery and must exist. The file can also contain any standard pi-ai provider variables, such as `OPENAI_API_KEY`, AWS credentials, or Google and Cloudflare configuration. If it contains secrets, use restrictive permissions such as `chmod 600 .env.gettext`.
 
 Run extraction:
 
@@ -170,28 +122,71 @@ Run extraction:
 npx vue-gettext-extract
 ```
 
-Run AI translation for missing entries with API key auth:
+Run AI translation with a local environment file:
 
 ```bash
-OPENAI_API_KEY=your-key npx vue-gettext-translate
-```
-
-Run AI translation with OAuth auth:
-
-```bash
-OPENAI_OAUTH_ACCESS_TOKEN=... \
-OPENAI_OAUTH_REFRESH_TOKEN=... \
-OPENAI_OAUTH_ACCOUNT_ID=... \
 npx vue-gettext-translate
 ```
 
-Or point `translate.openai.credentialsPath` at a saved OAuth JSON file.
-
-Login helper for OAuth:
+Or choose a model for one invocation:
 
 ```bash
-npx vue-gettext-openai-login
+ANTHROPIC_API_KEY=your-key npx vue-gettext-translate \
+  --provider anthropic --model claude-sonnet-4-5
 ```
+
+OpenAI API example:
+
+```bash
+OPENAI_API_KEY=your-key npx vue-gettext-translate \
+  --provider openai --model gpt-4.1-mini
+```
+
+For CI, set the pair and provider credentials as protected environment variables; no local file is required:
+
+```yaml
+env:
+  VUE_GETTEXT_PROVIDER: openai
+  VUE_GETTEXT_MODEL: gpt-4.1-mini
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+```
+
+All built-in, tool-capable pi-ai text providers are supported. API-key and ambient provider credentials take precedence over saved credentials. For interactive API-key or OAuth login, use the provider-aware auth command:
+
+```bash
+npx vue-gettext-auth login anthropic --type api-key
+npx vue-gettext-auth login anthropic --type oauth
+npx vue-gettext-auth login openai-codex --type oauth
+npx vue-gettext-auth list
+npx vue-gettext-auth logout anthropic
+```
+
+Saved credentials are provider-keyed in `~/.vue-gettext/auth.json` by default. Override that location only with `VUE_GETTEXT_CREDENTIALS_PATH` or `--credentials`. Writes are locked and atomic, with `0700` parent directories and `0600` files. The commands never print credential values.
+
+Useful translation flags include:
+
+- `--config, -c <path>`: use a specific config file
+- `--env-file <path>`: use a specific local environment file
+- `--credentials <path>`: use a specific credential store
+- `--provider <id> --model <id>`: select an atomic provider/model pair
+- `--base-url <url>`: override the selected model endpoint
+- `--locale, -l <locale>`: restrict translation to one or more locales
+- `--include-translated`: retranslate existing values
+- `--dry-run`: validate provider output without writing PO files
+
+### Migrating from v4
+
+v5 requires Node 22.19 or newer and uses pi-ai for every provider. Legacy configuration is rejected with an inline migration example:
+
+| v4                                     | v5                                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------------- |
+| `translate.provider: "openai"`         | `translate.model.provider: "openai"`                                            |
+| `translate.model: "gpt-4.1-mini"`      | `translate.model.id: "gpt-4.1-mini"`                                            |
+| `translate.openai.authMode: "api-key"` | Provider `openai`; use `OPENAI_API_KEY`                                         |
+| `translate.openai.authMode: "oauth"`   | Provider `openai-codex`; use `vue-gettext-auth login openai-codex --type oauth` |
+| `vue-gettext-openai-login`             | `vue-gettext-auth login [provider] --type api-key\|oauth`                       |
+
+Project workflow options such as `locales` and `includeTranslated` remain in `gettext.config.js`. Provider, model, endpoint, credential location, and provider-specific credentials can all be local-only.
 
 Run compilation:
 
@@ -200,8 +195,6 @@ npx vue-gettext-compile
 ```
 
 ## Contribute
-
-> Note: We're publishing a stable 4.1.1 next (dropping the beta suffix).
 
 Please make sure your code is properly formatted (the project contains a `prettier` config) and all the tests run successfully (`npm run test`) when opening a pull request.
 
