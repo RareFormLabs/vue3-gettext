@@ -90,6 +90,12 @@ export type KeywordMapping = {
   ctx?: string[];
 };
 
+export type TranslationModelConfig = {
+  provider: string;
+  id: string;
+  baseUrl?: string;
+};
+
 type ParserOptions =
   | {
       /** extract different keywords */
@@ -129,24 +135,9 @@ export interface GettextConfig {
     autoFill?: boolean | string[];
   };
   translate: {
-    provider: string;
-    model: string;
+    model?: TranslationModelConfig;
     locales?: string[];
     includeTranslated: boolean;
-    openai?: {
-      authMode?: "api-key" | "oauth";
-      apiKeyEnvVar?: string;
-      credentialsPath?: string;
-      accessTokenEnvVar?: string;
-      refreshTokenEnvVar?: string;
-      accountIdEnvVar?: string;
-      persistRefresh?: boolean;
-      originator?: string;
-      baseUrl?: string;
-      model?: string;
-      organization?: string;
-      project?: string;
-    };
   };
 }
 

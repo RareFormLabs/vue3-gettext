@@ -6,7 +6,7 @@ export default defineConfig({
     "./scripts/gettext_extract.ts",
     "./scripts/gettext_compile.ts",
     "./scripts/gettext_translate.ts",
-    "./scripts/gettext_openai_login.ts",
+    "./scripts/gettext_auth.ts",
   ],
   output: [{ dir: "dist", format: "es" }],
 });

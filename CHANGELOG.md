@@ -1,5 +1,19 @@
 # Changelog
 
+## 5.0.0 (2026-08-04)
+
+### Breaking changes
+
+- Require Node 22.19 or newer.
+- Replace `translate.provider`, string-valued `translate.model`, and `translate.openai` with an optional `translate.model: { provider, id, baseUrl? }` repository fallback.
+- Replace `vue-gettext-openai-login` with the provider-aware `vue-gettext-auth` command.
+
+### Features
+
+- Let each developer select an atomic provider/model pair through CLI flags, shell variables, or an untracked `.env.gettext` without changing repository configuration.
+- Translate through pi-ai's built-in provider catalog with strict tool-response validation.
+- Add provider-keyed API-key and OAuth credentials with locked, atomic, permission-restricted persistence.
+
 ## [4.3.3](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v4.3.2...vue3-gettext-v4.3.3) (2026-08-04)
 
 
