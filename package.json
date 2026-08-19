@@ -77,7 +77,7 @@
     "oxfmt": "^0.63.0",
     "oxlint": "^1.78.0",
     "rolldown-plugin-dts": "^0.28.1",
-    "rolldown": "^1.2.3",
+    "rolldown": "^1.2.4",
     "tsx": "^4.23.12",
     "typescript": "^6.0.3",
     "vite": "^8.2.1",
