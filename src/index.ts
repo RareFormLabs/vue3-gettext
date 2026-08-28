@@ -92,8 +92,8 @@ export function createGettext(options: Partial<GetTextOptions> = {}) {
   const interpolate = interpolateRaw(gettext);
   gettext.$gettext = translate.gettext.bind(translate);
   gettext.$pgettext = translate.pgettext.bind(translate);
-  gettext.$ngettext = translate.ngettext.bind(translate);
-  gettext.$npgettext = translate.npgettext.bind(translate);
+  gettext.$ngettext = translate.ngettext.bind(translate) as Language["$ngettext"];
+  gettext.$npgettext = translate.npgettext.bind(translate) as Language["$npgettext"];
   gettext.interpolate = interpolate.bind(interpolate);
 
   return gettext;
