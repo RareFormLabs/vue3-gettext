@@ -1,6 +1,6 @@
 {
   "name": "@rareformlabs/vue3-gettext",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "Translate Vue 3 applications with gettext (maintained fork)",
   "homepage": "https://github.com/RareFormLabs/vue3-gettext",
   "author": "Leo Zurbriggen",
