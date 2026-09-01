@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.1](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v5.1.0...vue3-gettext-v5.1.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* keep pi-ai external in CLI bundles ([#250](https://github.com/RareFormLabs/vue3-gettext/issues/250)) ([3aa8dc4](https://github.com/RareFormLabs/vue3-gettext/commit/3aa8dc46e2b50f114458561aa4f9cda02bf8ca7e))
+
 ## [5.1.0](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v5.0.0...vue3-gettext-v5.1.0) (2026-09-01)
 
 
