@@ -82,7 +82,7 @@
     "typescript": "npm:typescript-native-bridge@latest",
     "vite": "^8.2.2",
     "vitepress": "^1.6.4",
-    "vitest": "^4.1.11",
+    "vitest": "^5.0.0",
     "vue": "^3.5.42",
     "vue-tsc": "^3.3.11"
   },
