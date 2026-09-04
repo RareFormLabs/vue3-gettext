@@ -72,7 +72,7 @@
     "@types/node": "^24.12.4",
     "@types/proper-lockfile": "^4.1.4",
     "@vitejs/plugin-vue": "^6.0.8",
-    "@vue/test-utils": "^2.4.11",
+    "@vue/test-utils": "^2.5.0",
     "happy-dom": "^20.11.8",
     "oxfmt": "^0.65.0",
     "oxlint": "^1.80.0",
