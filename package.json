@@ -73,7 +73,7 @@
     "@types/proper-lockfile": "^4.1.4",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/test-utils": "^2.5.0",
-    "happy-dom": "^20.11.15",
+    "happy-dom": "^20.12.0",
     "oxfmt": "^0.65.0",
     "oxlint": "^1.80.0",
     "rolldown-plugin-dts": "^0.28.3",
