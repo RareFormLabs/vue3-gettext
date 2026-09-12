@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.1.2](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v5.1.1...vue3-gettext-v5.1.2) (2026-09-12)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @earendil-works/pi-ai to ^0.84.4 ([#261](https://github.com/RareFormLabs/vue3-gettext/issues/261)) ([0f22a2c](https://github.com/RareFormLabs/vue3-gettext/commit/0f22a2cdd8d143d35f11f2c74d90e51a9f0b8075))
+* **deps:** update dependency @earendil-works/pi-ai to ^0.85.0 ([#273](https://github.com/RareFormLabs/vue3-gettext/issues/273)) ([08ab160](https://github.com/RareFormLabs/vue3-gettext/commit/08ab16001a9357f87e70ecb8f1d1bdced65fdb29))
+* **deps:** update dependency @earendil-works/pi-ai to ^0.85.1 ([#274](https://github.com/RareFormLabs/vue3-gettext/issues/274)) ([44a8a38](https://github.com/RareFormLabs/vue3-gettext/commit/44a8a386b78ae68ea86382fee0bacddbe40f431b))
+
 ## [5.1.1](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v5.1.0...vue3-gettext-v5.1.1) (2026-09-01)
 
 
