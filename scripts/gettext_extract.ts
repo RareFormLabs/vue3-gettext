@@ -63,14 +63,7 @@ const deduplicateIdenticalMessages = (poFile: string) => {
     groups.set(key, group);
   });
 
-  const duplicateGroups = [...groups.values()].filter((group) => group.length > 1);
-  if (duplicateGroups.length === 0) {
-    return 0;
-  }
-
-  // A duplicate with different translations needs a human decision. Leave the file intact
-  // and let msgmerge report the invalid catalog rather than silently choosing a translation.
-  if (duplicateGroups.some((group) => group.some((item) => !areTranslationsEqual(item.msgstr, group[0].msgstr)))) {
+  if (![...groups.values()].some((group) => group.length > 1)) {
     return 0;
   }
 
@@ -78,6 +71,11 @@ const deduplicateIdenticalMessages = (poFile: string) => {
   po.items = [...groups.values()].flatMap((group) => {
     const [first, ...duplicates] = group;
     if (!first || duplicates.length === 0) {
+      return group;
+    }
+    // Conflicting translations need a human decision. Keep that group intact and let msgmerge
+    // report it, while still cleaning up independent groups that are safe to deduplicate.
+    if (duplicates.some((item) => !areTranslationsEqual(item.msgstr, first.msgstr))) {
       return group;
     }
 
