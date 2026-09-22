@@ -47,6 +47,60 @@ const getFiles = async (config: GettextConfig) => {
   return filesFlat;
 };
 
+const areTranslationsEqual = (left: string[], right: string[]) =>
+  left.length === right.length && left.every((translation, index) => translation === right[index]);
+
+const mergeUniqueValues = (left: string[], right: string[]) => [...new Set([...left, ...right])];
+
+const deduplicateIdenticalMessages = (poFile: string) => {
+  const po = PO.parse(readFileSync(poFile, "utf-8"));
+  const groups = new Map<string, InstanceType<typeof PO.Item>[]>();
+
+  po.items.forEach((item) => {
+    const key = JSON.stringify([item.msgctxt ?? null, item.msgid, item.msgid_plural ?? null, item.obsolete]);
+    const group = groups.get(key) ?? [];
+    group.push(item);
+    groups.set(key, group);
+  });
+
+  const duplicateGroups = [...groups.values()].filter((group) => group.length > 1);
+  if (duplicateGroups.length === 0) {
+    return 0;
+  }
+
+  // A duplicate with different translations needs a human decision. Leave the file intact
+  // and let msgmerge report the invalid catalog rather than silently choosing a translation.
+  if (duplicateGroups.some((group) => group.some((item) => !areTranslationsEqual(item.msgstr, group[0].msgstr)))) {
+    return 0;
+  }
+
+  let removedCount = 0;
+  po.items = [...groups.values()].flatMap((group) => {
+    const [first, ...duplicates] = group;
+    if (!first || duplicates.length === 0) {
+      return group;
+    }
+
+    removedCount += duplicates.length;
+    duplicates.forEach((duplicate) => {
+      first.comments = mergeUniqueValues(first.comments, duplicate.comments);
+      first.extractedComments = mergeUniqueValues(first.extractedComments, duplicate.extractedComments);
+      first.references = mergeUniqueValues(first.references, duplicate.references);
+      Object.entries(duplicate.flags).forEach(([flag, enabled]) => {
+        if (enabled) {
+          first.flags[flag] = true;
+        }
+      });
+    });
+    return [first];
+  });
+
+  if (removedCount > 0) {
+    writeFileSync(poFile, po.toString());
+  }
+  return removedCount;
+};
+
 async function main() {
   const config = await loadConfig(options);
   console.info(`Input directory: ${colorize("blue", config.input.path)}`);
@@ -71,6 +125,12 @@ async function main() {
     mkdirSync(poDir, { recursive: true });
     const isFile = existsSync(poFile) && lstatSync(poFile).isFile();
     if (isFile) {
+      const deduplicatedCount = deduplicateIdenticalMessages(poFile);
+      if (deduplicatedCount > 0) {
+        console.info(
+          `${colorize("green", "Removed identical duplicate messages")}: ${colorize("blue", `${deduplicatedCount} in ${poFile}`)}`,
+        );
+      }
       await execShellCommand(
         `msgmerge --lang=${loc} --update ${poFile} ${config.output.potPath} ${noFuzzyMatching} ${noLocation} --backup=off`,
       );

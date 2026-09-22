@@ -105,6 +105,12 @@ By default, the extractor includes line numbers in the PO file comments (`#: fil
 
 To reduce this, set `addLocation: 'file'` to only include filenames, or `'never'` to remove location comments entirely.
 
+If a merge leaves the same PO message more than once, extraction removes duplicate entries when their gettext key
+(context, singular ID, and plural ID) and translations match. Comments, references, and flags from each copy are
+preserved. Duplicate entries with different translations are left untouched so `msgmerge` can report them for manual
+resolution instead of discarding a translation. After resolving PO catalogs, run the full refresh command to regenerate
+compiled JSON catalogs; Git may still require `git add` to mark those generated files as resolved.
+
 ### Mechanical Default Locales (Auto-fill)
 
 For your primary language (e.g., English), it can be tedious to manually copy `msgid` to `msgstr`.
