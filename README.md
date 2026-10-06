@@ -198,6 +198,8 @@ Or, with Vite, let the plugin compile on startup and whenever a `.po` file chang
 
 ```js
 // vite.config.js
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
 import gettext from "@rareformlabs/vue3-gettext/vite";
 
 export default defineConfig({

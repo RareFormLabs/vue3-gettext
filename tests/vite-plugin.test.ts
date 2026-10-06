@@ -77,6 +77,55 @@ describe("vite plugin", () => {
     expect(await readFile(join(langDir, "fr.json"), "utf-8")).toBe(`{\n  "fr": {\n    "Hello": "Bonjour"\n  }\n}\n`);
   });
 
+  it("fails a build when initial PO compilation fails", async () => {
+    const { root, langDir, configPath } = await setupProject();
+    await writeFile(join(langDir, "fr.po"), 'msgid ""\nmsgstr ""\n\n<<<<<<< HEAD\n');
+
+    await expect(
+      build({
+        root,
+        configFile: false,
+        logLevel: "silent",
+        plugins: [gettext({ config: configPath })],
+        build: { write: false, rollupOptions: { input: join(root, "main.js") } },
+      }),
+    ).rejects.toThrow("No Language headers found!");
+  });
+
+  it.each(["change", "add"])("recovers from initial PO compilation failure on %s", async (event) => {
+    const { root, langDir, configPath, jsonPath } = await setupProject();
+    const appRoot = join(root, "app");
+    await mkdir(appRoot);
+    const poPath = join(langDir, "fr.po");
+    if (event === "add") {
+      await rm(poPath);
+    } else {
+      await writeFile(poPath, 'msgid ""\nmsgstr ""\n\n<<<<<<< HEAD\n');
+    }
+    const logger = createLogger("silent");
+    const errorSpy = vi.spyOn(logger, "error");
+
+    server = await createServer({
+      // Existing PO paths outside the root must still be registered after a failure.
+      root: event === "change" ? appRoot : root,
+      configFile: false,
+      customLogger: logger,
+      plugins: [gettext({ config: configPath })],
+      server: { middlewareMode: true, ws: false },
+    });
+    await vi.waitFor(() =>
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("vue3-gettext: failed to compile translations"), {
+        timestamp: true,
+      }),
+    );
+    await vi.waitFor(() => expect(server!.watcher.getWatched()).toHaveProperty(langDir));
+
+    await writeFile(poPath, po("fr", { Hello: "Salut" }));
+    await vi.waitFor(async () =>
+      expect(JSON.parse(await readFile(jsonPath, "utf-8"))).toEqual({ fr: { Hello: "Salut" } }),
+    );
+  });
+
   it("recompiles in the dev server when a .po file changes, and survives a broken one", async () => {
     const { root, langDir, configPath, jsonPath } = await setupProject();
     const logger = createLogger("silent");

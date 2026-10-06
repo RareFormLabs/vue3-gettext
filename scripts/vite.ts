@@ -14,6 +14,7 @@ export interface GettextPluginOptions {
  */
 export default function gettext(options: GettextPluginOptions = {}): Plugin {
   let logger: Logger | undefined;
+  let isBuild = true;
   let poPaths = new Set<string>();
 
   // Vite may call buildStart once per environment; run compiles one at a time.
@@ -33,10 +34,20 @@ export default function gettext(options: GettextPluginOptions = {}): Plugin {
 
     configResolved(config) {
       logger = config.logger;
+      isBuild = config.command === "build";
     },
 
     async buildStart() {
-      await compile();
+      try {
+        await compile();
+      } catch (e) {
+        if (isBuild) {
+          throw e;
+        }
+        logger?.error(`vue3-gettext: failed to compile translations\n${e instanceof Error ? e.message : e}`, {
+          timestamp: true,
+        });
+      }
       // Also makes the dev server watch .po files that live outside the Vite root.
       for (const poPath of poPaths) {
         this.addWatchFile(poPath);
