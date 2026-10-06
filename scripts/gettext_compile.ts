@@ -3,7 +3,7 @@
 import commandLineArgs, { OptionDefinition } from "command-line-args";
 import fsPromises from "node:fs/promises";
 import path from "node:path";
-import { compilePoFiles } from "./compile.js";
+import { compilePoFiles, serializeTranslations } from "./compile.js";
 import { loadConfig } from "./config.js";
 import { colorize } from "./utils.js";
 
@@ -38,16 +38,14 @@ try {
         const outputPath = path.join(config.output.jsonPath, `${locale}.json`);
         await fsPromises.writeFile(
           outputPath,
-          JSON.stringify({
-            [locale]: jsonRes[locale],
-          }),
+          serializeTranslations({ [locale]: jsonRes[locale] }, config.output.prettyJson),
         );
         console.info(`${colorize("green", "Created")}: ${colorize("blue", outputPath)}`);
       }),
     );
   } else {
     const outputPath = config.output.jsonPath;
-    await fsPromises.writeFile(outputPath, JSON.stringify(jsonRes));
+    await fsPromises.writeFile(outputPath, serializeTranslations(jsonRes, config.output.prettyJson));
     console.info(`${colorize("green", "Created")}: ${colorize("blue", outputPath)}`);
   }
 })();

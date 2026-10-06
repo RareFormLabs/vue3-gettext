@@ -69,6 +69,7 @@ const config = {
     flat: true, // create a subdirectory for each locale
     linguas: true, // create a LINGUAS file
     splitJson: false, // create separate json files for each locale. If used, jsonPath must end with a directory, not a file
+    prettyJson: false, // write compiled json with sorted keys and one entry per line instead of minified
     fuzzyMatching: true, // set if fuzzy matching should be enabled when merging the pot file into the po files
     locations: true, // output location paths
     /**
@@ -104,6 +105,11 @@ export default config;
 By default, the extractor includes line numbers in the PO file comments (`#: file.js:123`). This often causes noisy merge conflicts when lines shift.
 
 To reduce this, set `addLocation: 'file'` to only include filenames, or `'never'` to remove location comments entirely.
+
+If you commit the compiled JSON, set `prettyJson: true`. By default the JSON is minified onto a single line, so any two
+branches that change any translation will conflict. With `prettyJson`, keys are sorted and each entry is on its own
+line, so unrelated changes merge cleanly. This does not affect your bundle size when the JSON is imported through a
+bundler such as Vite, which re-serializes and minifies it.
 
 If a merge leaves the same PO message more than once, extraction removes duplicate entries when their gettext key
 (context, singular ID, and plural ID) and translations match. Comments, references, and flags from each copy are

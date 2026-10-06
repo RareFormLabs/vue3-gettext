@@ -47,6 +47,28 @@ export const po2json = (poContent: string) => {
   };
 };
 
+// Arrays are left alone: plural forms are positional.
+const sortKeys = (value: unknown): unknown => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+  const obj = value as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.keys(obj)
+      .sort()
+      .map((key) => [key, sortKeys(obj[key])]),
+  );
+};
+
+/**
+ * Serializes compiled translations for writing to disk.
+ *
+ * When `pretty` is set, keys are sorted and each entry gets its own line so that
+ * unrelated translation changes on different branches merge cleanly in git.
+ */
+export const serializeTranslations = (translations: Translations, pretty = false) =>
+  pretty ? `${JSON.stringify(sortKeys(translations), null, 2)}\n` : JSON.stringify(translations);
+
 export const compilePoFiles = async (localesPaths: string[]) => {
   const translations: Translations = {};
 
