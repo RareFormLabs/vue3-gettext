@@ -23,6 +23,7 @@ describe("vite plugin", () => {
   let server: ViteDevServer | undefined;
 
   afterEach(async () => {
+    vi.unstubAllEnvs();
     await server?.close();
     server = undefined;
     if (tmpDir) {
@@ -92,7 +93,26 @@ describe("vite plugin", () => {
     ).rejects.toThrow("No Language headers found!");
   });
 
+  it("fails Vitest startup when initial PO compilation fails", async () => {
+    // Vitest sets this before starting its Vite server (and it is already set while these tests run).
+    vi.stubEnv("VITEST", "true");
+    const { root, langDir, configPath } = await setupProject();
+    await writeFile(join(langDir, "fr.po"), 'msgid ""\nmsgstr ""\n\n<<<<<<< HEAD\n');
+
+    await expect(
+      createServer({
+        root,
+        configFile: false,
+        logLevel: "silent",
+        plugins: [gettext({ config: configPath })],
+        server: { middlewareMode: true, ws: false },
+      }).then((s) => (server = s)),
+    ).rejects.toThrow("No Language headers found!");
+  });
+
   it.each(["change", "add"])("recovers from initial PO compilation failure on %s", async (event) => {
+    // Simulate the interactive dev server rather than Vitest.
+    vi.stubEnv("VITEST", "");
     const { root, langDir, configPath, jsonPath } = await setupProject();
     const appRoot = join(root, "app");
     await mkdir(appRoot);

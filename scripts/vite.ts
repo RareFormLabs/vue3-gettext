@@ -14,7 +14,8 @@ export interface GettextPluginOptions {
  */
 export default function gettext(options: GettextPluginOptions = {}): Plugin {
   let logger: Logger | undefined;
-  let isBuild = true;
+  // Fail on compile errors except in the interactive dev server, which logs them and recovers on the next .po change.
+  let failOnError = true;
   let poPaths = new Set<string>();
 
   // Vite may call buildStart once per environment; run compiles one at a time.
@@ -34,14 +35,15 @@ export default function gettext(options: GettextPluginOptions = {}): Plugin {
 
     configResolved(config) {
       logger = config.logger;
-      isBuild = config.command === "build";
+      // Vitest runs Vite with command "serve"; failing there keeps tests from running against stale json.
+      failOnError = config.command === "build" || !!process.env.VITEST;
     },
 
     async buildStart() {
       try {
         await compile();
       } catch (e) {
-        if (isBuild) {
+        if (failOnError) {
           throw e;
         }
         logger?.error(`vue3-gettext: failed to compile translations\n${e instanceof Error ? e.message : e}`, {
