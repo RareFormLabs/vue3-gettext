@@ -1,0 +1,129 @@
+// @vitest-environment node
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "fs/promises";
+import { join } from "path";
+import { tmpdir } from "os";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { build, createLogger, createServer, type Rollup, type ViteDevServer } from "vite";
+import gettext from "../scripts/vite.js";
+import { compileTranslations } from "../scripts/compile.js";
+import { loadConfig } from "../scripts/config.js";
+
+const po = (lang: string, entries: Record<string, string>) =>
+  [
+    'msgid ""',
+    'msgstr ""',
+    `"Language: ${lang}\\n"`,
+    '"Content-Type: text/plain; charset=UTF-8\\n"',
+    "",
+    ...Object.entries(entries).flatMap(([id, str]) => [`msgid "${id}"`, `msgstr "${str}"`, ""]),
+  ].join("\n");
+
+describe("vite plugin", () => {
+  let tmpDir: string | undefined;
+  let server: ViteDevServer | undefined;
+
+  afterEach(async () => {
+    await server?.close();
+    server = undefined;
+    if (tmpDir) {
+      await rm(tmpDir, { recursive: true, force: true });
+      tmpDir = undefined;
+    }
+  });
+
+  const setupProject = async (output: Record<string, unknown> = {}) => {
+    tmpDir = await mkdtemp(join(tmpdir(), "vue3-gettext-vite-"));
+    const langDir = join(tmpDir, "lang");
+    const configPath = join(tmpDir, "gettext.config.mjs");
+    await writeFile(
+      configPath,
+      `export default ${JSON.stringify({ output: { path: langDir, locales: ["fr"], ...output } })};`,
+    );
+    await mkdir(langDir);
+    await writeFile(join(langDir, "fr.po"), po("fr", { Hello: "Bonjour" }));
+    await writeFile(
+      join(tmpDir, "main.js"),
+      `import translations from "./lang/translations.json";\nconsole.log(translations.fr.Hello);\n`,
+    );
+    return { root: tmpDir, langDir, configPath, jsonPath: join(langDir, "translations.json") };
+  };
+
+  it("compiles .po files before a build so the json can be imported", async () => {
+    const { root, configPath, jsonPath } = await setupProject();
+
+    const result = (await build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [gettext({ config: configPath })],
+      build: { write: false, rollupOptions: { input: join(root, "main.js") } },
+    })) as Rollup.RollupOutput;
+
+    expect(JSON.parse(await readFile(jsonPath, "utf-8"))).toEqual({ fr: { Hello: "Bonjour" } });
+    expect(result.output[0].type === "chunk" && result.output[0].code).toContain("Bonjour");
+  });
+
+  it("respects splitJson and prettyJson", async () => {
+    const { root, langDir, configPath } = await setupProject({ splitJson: true, prettyJson: true });
+
+    await build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [gettext({ config: configPath })],
+      build: { write: false, rollupOptions: { input: join(langDir, "fr.json") } },
+    });
+
+    expect(await readFile(join(langDir, "fr.json"), "utf-8")).toBe(`{\n  "fr": {\n    "Hello": "Bonjour"\n  }\n}\n`);
+  });
+
+  it("recompiles in the dev server when a .po file changes, and survives a broken one", async () => {
+    const { root, langDir, configPath, jsonPath } = await setupProject();
+    const logger = createLogger("silent");
+    const errorSpy = vi.spyOn(logger, "error");
+
+    server = await createServer({
+      root,
+      configFile: false,
+      customLogger: logger,
+      plugins: [gettext({ config: configPath })],
+      server: { middlewareMode: true, ws: false, watch: null },
+    });
+    await vi.waitFor(async () => expect(JSON.parse(await readFile(jsonPath, "utf-8")).fr.Hello).toBe("Bonjour"));
+
+    const poPath = join(langDir, "fr.po");
+    await writeFile(poPath, po("fr", { Hello: "Salut" }));
+    server.watcher.emit("change", poPath);
+    await vi.waitFor(async () => expect(JSON.parse(await readFile(jsonPath, "utf-8")).fr.Hello).toBe("Salut"));
+
+    // e.g. a .po file left with merge conflict markers
+    await writeFile(poPath, 'msgid ""\nmsgstr ""\n\n<<<<<<< HEAD\n');
+    server.watcher.emit("change", poPath);
+    await vi.waitFor(() =>
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("vue3-gettext"), expect.anything()),
+    );
+    expect(JSON.parse(await readFile(jsonPath, "utf-8")).fr.Hello).toBe("Salut");
+  });
+});
+
+describe("compileTranslations", () => {
+  it("doesn't rewrite json files whose content is unchanged", async () => {
+    const tmpDir = await mkdtemp(join(tmpdir(), "vue3-gettext-compile-"));
+    try {
+      await writeFile(join(tmpDir, "fr.po"), po("fr", { Hello: "Bonjour" }));
+      const configPath = join(tmpDir, "gettext.config.mjs");
+      await writeFile(configPath, `export default ${JSON.stringify({ output: { path: tmpDir, locales: ["fr"] } })};`);
+      const config = await loadConfig({ config: configPath });
+
+      const first = await compileTranslations(config);
+      const mtime = (await stat(config.output.jsonPath)).mtimeMs;
+      const second = await compileTranslations(config);
+
+      expect(first.files).toEqual([{ path: config.output.jsonPath, changed: true }]);
+      expect(second.files).toEqual([{ path: config.output.jsonPath, changed: false }]);
+      expect((await stat(config.output.jsonPath)).mtimeMs).toBe(mtime);
+    } finally {
+      await rm(tmpDir, { recursive: true, force: true });
+    }
+  });
+});

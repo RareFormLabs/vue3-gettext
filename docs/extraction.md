@@ -25,6 +25,39 @@ First, add scripts to your `package.json`:
 
 Using these scripts is _theoretically_ optional if you have other means of extraction or may even want to write message files yourself.
 
+## Vite plugin
+
+If your app is built with Vite, you can let the bundled Vite plugin compile your `.po` files instead of running
+`vue-gettext-compile` yourself. It compiles them when Vite starts (`vite`, `vite build`, and Vitest), and recompiles
+whenever a `.po` file changes while the dev server is running.
+
+```js { vite.config.js }
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import gettext from "@rareformlabs/vue3-gettext/vite";
+
+export default defineConfig({
+  plugins: [vue(), gettext()],
+});
+```
+
+The plugin reads the same `gettext.config.js` as the scripts. To use a different file, pass
+`gettext({ config: "./path/to/gettext.config.js" })`. As with the scripts, relative paths in the config are resolved
+from the current working directory.
+
+Because the compiled json is now generated whenever the app is built, you can stop committing it, which avoids merge
+conflicts in it entirely. Keep committing the `.po` and `.pot` files, and ignore the compiled output:
+
+```gitignore
+# with the default jsonPath
+src/language/translations.json
+# or, with splitJson
+src/language/*.json
+```
+
+If you type-check with `vue-tsc` or `tsc` before Vite runs (for example in CI), the json won't exist yet. Run
+`vue-gettext-compile` first in that case.
+
 ## Configuration
 
 Before running the scripts, create a file `gettext.config.js` in your application root. This is a configuration _only_ for the scripts above. A minimal configuration may look like this:
@@ -106,7 +139,8 @@ By default, the extractor includes line numbers in the PO file comments (`#: fil
 
 To reduce this, set `addLocation: 'file'` to only include filenames, or `'never'` to remove location comments entirely.
 
-If you commit the compiled JSON, set `prettyJson: true`. By default the JSON is minified onto a single line, so any two
+If you use Vite, the [Vite plugin](#vite-plugin) generates the compiled JSON so you don't have to commit it. If you
+do commit the compiled JSON, set `prettyJson: true`. By default the JSON is minified onto a single line, so any two
 branches that change any translation will conflict. With `prettyJson`, keys are sorted and each entry is on its own
 line, so unrelated changes merge cleanly. This does not affect your bundle size when the JSON is imported through a
 bundler such as Vite, which re-serializes and minifies it.
