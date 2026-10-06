@@ -56,10 +56,16 @@
     "node": ">= 22.23.3"
   },
   "peerDependencies": {
+    "vite": ">=5.0.0",
     "vue": ">=3.0.0"
   },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
+  },
   "dependencies": {
-    "@earendil-works/pi-ai": "^0.87.1",
+    "@earendil-works/pi-ai": "^1.0.4",
     "chalk": "^6.0.1",
     "command-line-args": "^6.0.2",
     "glob": "^13.0.6",
@@ -90,6 +96,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.js"
     },
     "./extract": {
       "types": "./dist/extract.d.ts",

@@ -87,6 +87,7 @@ export const loadConfig = async (cliArgs?: { config?: string }): Promise<LoadedG
       flat: config.output?.flat === undefined ? true : config.output.flat,
       linguas: config.output?.linguas === undefined ? true : config.output.linguas,
       splitJson: config.output?.splitJson === undefined ? false : config.output.splitJson,
+      prettyJson: config.output?.prettyJson === undefined ? false : config.output.prettyJson,
       fuzzyMatching: config.output?.fuzzyMatching === undefined ? true : config.output.fuzzyMatching,
       locations: config.output?.locations === undefined ? true : config.output.locations,
       addLocation: config.output?.addLocation,

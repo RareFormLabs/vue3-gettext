@@ -15,6 +15,14 @@ export default defineConfig([
     output: [{ dir: "dist", format: "es" }],
   },
   {
+    // Node-only entry, kept separate so it never ends up in the browser bundle.
+    input: { vite: "./scripts/vite.ts" },
+    platform: "node",
+    external,
+    plugins: [dts({ tsconfig: "./scripts/tsconfig.json" })],
+    output: [{ dir: "dist", format: "es" }],
+  },
+  {
     // Node-only entry (depends on pofile -> fs), kept separate so it never ends
     // up in the browser bundle.
     input: { extract: "./src/extract/index.ts" },

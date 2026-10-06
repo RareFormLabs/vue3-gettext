@@ -194,6 +194,21 @@ Run compilation:
 npx vue-gettext-compile
 ```
 
+Or, with Vite, let the plugin compile on startup and whenever a `.po` file changes, so the compiled JSON doesn't need to be committed:
+
+```js
+// vite.config.js
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import gettext from "@rareformlabs/vue3-gettext/vite";
+
+export default defineConfig({
+  plugins: [vue(), gettext()],
+});
+```
+
+See [Message extraction](https://rareformlabs.github.io/vue3-gettext/extraction.html#vite-plugin) for details.
+
 ## Contribute
 
 Please make sure your code is properly formatted (the project contains a `prettier` config) and all the tests run successfully (`npm run test`) when opening a pull request.
