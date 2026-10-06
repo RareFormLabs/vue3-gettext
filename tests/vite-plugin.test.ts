@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from "fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, realpath, rm, stat, writeFile } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
 import { describe, it, expect, vi, afterEach } from "vitest";
@@ -138,7 +138,11 @@ describe("vite plugin", () => {
         timestamp: true,
       }),
     );
-    await vi.waitFor(() => expect(server!.watcher.getWatched()).toHaveProperty(langDir));
+    // Directories under the root are reported by their real path (e.g. /private/var/... for macOS temp dirs).
+    const langDirPaths = [langDir, await realpath(langDir)];
+    await vi.waitFor(() =>
+      expect(Object.keys(server!.watcher.getWatched()).some((dir) => langDirPaths.includes(dir))).toBe(true),
+    );
 
     await writeFile(poPath, po("fr", { Hello: "Salut" }));
     await vi.waitFor(async () =>

@@ -1,3 +1,4 @@
+import { realpath } from "node:fs/promises";
 import path from "node:path";
 import { normalizePath, type Logger, type Plugin } from "vite";
 import { compileTranslations, getPoPaths } from "./compile.js";
@@ -8,6 +9,12 @@ export interface GettextPluginOptions {
   config?: string;
 }
 
+// The .po file itself may not exist yet, so resolve its directory.
+const realPoPath = async (poPath: string) => {
+  const dir = await realpath(path.dirname(poPath)).catch(() => path.dirname(poPath));
+  return normalizePath(path.join(dir, path.basename(poPath)));
+};
+
 /**
  * Compiles `.po` files to json when Vite starts and whenever a `.po` file changes,
  * so the compiled json doesn't need to be committed.
@@ -17,13 +24,17 @@ export default function gettext(options: GettextPluginOptions = {}): Plugin {
   // Fail on compile errors except in the interactive dev server, which logs them and recovers on the next .po change.
   let failOnError = true;
   let poPaths = new Set<string>();
+  // Watchers may report paths with symlinks resolved (e.g. macOS /var -> /private/var).
+  let realPoPaths = new Set<string>();
 
   // Vite may call buildStart once per environment; run compiles one at a time.
   let pending: Promise<unknown> = Promise.resolve();
   const compile = () => {
     const run = pending.then(async () => {
       const config = await loadConfig({ config: options.config });
-      poPaths = new Set(getPoPaths(config).map((p) => normalizePath(path.resolve(p))));
+      const resolved = getPoPaths(config).map((p) => path.resolve(p));
+      poPaths = new Set(resolved.map(normalizePath));
+      realPoPaths = new Set(await Promise.all(resolved.map(realPoPath)));
       return compileTranslations(config);
     });
     pending = run.catch(() => {});
@@ -58,7 +69,10 @@ export default function gettext(options: GettextPluginOptions = {}): Plugin {
 
     configureServer(server) {
       const onPoChange = async (file: string) => {
-        if (!poPaths.has(normalizePath(file))) {
+        if (!file.endsWith(".po")) {
+          return;
+        }
+        if (!poPaths.has(normalizePath(file)) && !realPoPaths.has(await realPoPath(file))) {
           return;
         }
         try {
