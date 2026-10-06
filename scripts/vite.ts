@@ -89,6 +89,8 @@ export default function gettext(options: GettextPluginOptions = {}): Plugin {
       };
       server.watcher.on("change", onPoChange);
       server.watcher.on("add", onPoChange);
+      // Report a deleted or renamed catalog instead of silently serving its last compiled json.
+      server.watcher.on("unlink", onPoChange);
     },
   };
 }
