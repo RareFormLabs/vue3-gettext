@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
 import { describe, it, expect, vi, afterEach } from "vitest";
@@ -122,6 +122,8 @@ describe("compileTranslations", () => {
       expect(first.files).toEqual([{ path: config.output.jsonPath, changed: true }]);
       expect(second.files).toEqual([{ path: config.output.jsonPath, changed: false }]);
       expect((await stat(config.output.jsonPath)).mtimeMs).toBe(mtime);
+      // written via a temp file that is renamed into place, none left behind
+      expect((await readdir(tmpDir)).sort()).toEqual(["fr.po", "gettext.config.mjs", "translations.json"]);
     } finally {
       await rm(tmpDir, { recursive: true, force: true });
     }

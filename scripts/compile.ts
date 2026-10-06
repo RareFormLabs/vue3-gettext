@@ -2,6 +2,7 @@
 
 import Pofile from "pofile";
 import fsPromises from "fs/promises";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { GettextConfig, LanguageData, MessageContext, Translations } from "../src/typeDefs.js";
 
@@ -99,7 +100,15 @@ const writeIfChanged = async (filePath: string, content: string) => {
   if (existing === content) {
     return false;
   }
-  await fsPromises.writeFile(filePath, content);
+  // Write to a temp file and rename it into place, so watchers never see a partially written file.
+  const tmpPath = `${filePath}.${randomUUID()}.tmp`;
+  try {
+    await fsPromises.writeFile(tmpPath, content);
+    await fsPromises.rename(tmpPath, filePath);
+  } catch (e) {
+    await fsPromises.rm(tmpPath, { force: true });
+    throw e;
+  }
   return true;
 };
 
