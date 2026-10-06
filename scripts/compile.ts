@@ -100,6 +100,8 @@ const writeIfChanged = async (filePath: string, content: string) => {
   if (existing === content) {
     return false;
   }
+  // The json may go to its own directory, which won't exist on a clean checkout if it isn't committed.
+  await fsPromises.mkdir(path.dirname(filePath), { recursive: true });
   // Write to a temp file and rename it into place, so watchers never see a partially written file.
   const tmpPath = `${filePath}.${randomUUID()}.tmp`;
   try {
@@ -119,7 +121,6 @@ const writeIfChanged = async (filePath: string, content: string) => {
  * (e.g. a Vite dev server) aren't triggered needlessly.
  */
 export const compileTranslations = async (config: GettextConfig) => {
-  await fsPromises.mkdir(config.output.path, { recursive: true });
   const translations = await compilePoFiles(getPoPaths(config));
   const outputs = config.output.splitJson
     ? config.output.locales.map((locale) => ({

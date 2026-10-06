@@ -180,6 +180,27 @@ describe("vite plugin", () => {
 });
 
 describe("compileTranslations", () => {
+  it.each([
+    ["a combined", { jsonPath: "generated/nested/translations.json" }, "generated/nested/translations.json"],
+    ["a split", { jsonPath: "generated/nested", splitJson: true }, "generated/nested/fr.json"],
+  ])("creates missing directories for %s json output", async (_, output, expectedFile) => {
+    const tmpDir = await mkdtemp(join(tmpdir(), "vue3-gettext-compile-"));
+    try {
+      await writeFile(join(tmpDir, "fr.po"), po("fr", { Hello: "Bonjour" }));
+      const configPath = join(tmpDir, "gettext.config.mjs");
+      await writeFile(
+        configPath,
+        `export default ${JSON.stringify({ output: { path: tmpDir, locales: ["fr"], ...output } })};`,
+      );
+
+      await compileTranslations(await loadConfig({ config: configPath }));
+
+      expect(JSON.parse(await readFile(join(tmpDir, expectedFile), "utf-8"))).toEqual({ fr: { Hello: "Bonjour" } });
+    } finally {
+      await rm(tmpDir, { recursive: true, force: true });
+    }
+  });
+
   it("doesn't rewrite json files whose content is unchanged", async () => {
     const tmpDir = await mkdtemp(join(tmpdir(), "vue3-gettext-compile-"));
     try {
