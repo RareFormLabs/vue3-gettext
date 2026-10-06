@@ -129,6 +129,8 @@ export interface GettextConfig {
     flat: boolean;
     linguas: boolean;
     splitJson: boolean;
+    /** write compiled json with sorted keys, one entry per line (reduces merge conflicts) */
+    prettyJson: boolean;
     fuzzyMatching: boolean;
     locations: boolean;
     addLocation?: "full" | "file" | "never";

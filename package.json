@@ -56,7 +56,13 @@
     "node": ">= 22.23.3"
   },
   "peerDependencies": {
+    "vite": ">=5.0.0",
     "vue": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@earendil-works/pi-ai": "^1.0.4",
@@ -87,8 +93,14 @@
     "vue-tsc": "^3.3.11"
   },
   "exports": {
-    "import": "./dist/index.js",
-    "types": "./dist/index.d.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.js"
+    }
   },
   "module": "dist/index.js",
   "types": "./dist/index.d.ts",

@@ -2,7 +2,9 @@
 
 import Pofile from "pofile";
 import fsPromises from "fs/promises";
-import { LanguageData, MessageContext, Translations } from "../src/typeDefs.js";
+import { randomUUID } from "node:crypto";
+import path from "node:path";
+import { GettextConfig, LanguageData, MessageContext, Translations } from "../src/typeDefs.js";
 
 /**
  * Returns a sanitized po data dictionary where:
@@ -47,6 +49,28 @@ export const po2json = (poContent: string) => {
   };
 };
 
+// Arrays are left alone: plural forms are positional.
+const sortKeys = (value: unknown): unknown => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+  const obj = value as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.keys(obj)
+      .sort()
+      .map((key) => [key, sortKeys(obj[key])]),
+  );
+};
+
+/**
+ * Serializes compiled translations for writing to disk.
+ *
+ * When `pretty` is set, keys are sorted and each entry gets its own line so that
+ * unrelated translation changes on different branches merge cleanly in git.
+ */
+export const serializeTranslations = (translations: Translations, pretty = false) =>
+  pretty ? `${JSON.stringify(sortKeys(translations), null, 2)}\n` : JSON.stringify(translations);
+
 export const compilePoFiles = async (localesPaths: string[]) => {
   const translations: Translations = {};
 
@@ -64,4 +88,49 @@ export const compilePoFiles = async (localesPaths: string[]) => {
   );
 
   return translations;
+};
+
+export const getPoPaths = (config: GettextConfig) =>
+  config.output.locales.map((loc) =>
+    config.output.flat ? path.join(config.output.path, `${loc}.po`) : path.join(config.output.path, `${loc}/app.po`),
+  );
+
+const writeIfChanged = async (filePath: string, content: string) => {
+  const existing = await fsPromises.readFile(filePath, { encoding: "utf-8" }).catch(() => undefined);
+  if (existing === content) {
+    return false;
+  }
+  // The json may go to its own directory, which won't exist on a clean checkout if it isn't committed.
+  await fsPromises.mkdir(path.dirname(filePath), { recursive: true });
+  // Write to a temp file and rename it into place, so watchers never see a partially written file.
+  const tmpPath = `${filePath}.${randomUUID()}.tmp`;
+  try {
+    await fsPromises.writeFile(tmpPath, content);
+    await fsPromises.rename(tmpPath, filePath);
+  } catch (e) {
+    await fsPromises.rm(tmpPath, { force: true });
+    throw e;
+  }
+  return true;
+};
+
+/**
+ * Compiles the configured locales' `.po` files and writes the json output.
+ *
+ * Files whose content is unchanged are not rewritten, so file watchers
+ * (e.g. a Vite dev server) aren't triggered needlessly.
+ */
+export const compileTranslations = async (config: GettextConfig) => {
+  const translations = await compilePoFiles(getPoPaths(config));
+  const outputs = config.output.splitJson
+    ? config.output.locales.map((locale) => ({
+        path: path.join(config.output.jsonPath, `${locale}.json`),
+        content: serializeTranslations({ [locale]: translations[locale] }, config.output.prettyJson),
+      }))
+    : [{ path: config.output.jsonPath, content: serializeTranslations(translations, config.output.prettyJson) }];
+
+  const files = await Promise.all(
+    outputs.map(async (output) => ({ path: output.path, changed: await writeIfChanged(output.path, output.content) })),
+  );
+  return { localeCount: Object.keys(translations).length, files };
 };

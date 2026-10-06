@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 
 import commandLineArgs, { OptionDefinition } from "command-line-args";
-import fsPromises from "node:fs/promises";
-import path from "node:path";
-import { compilePoFiles } from "./compile.js";
+import { compileTranslations } from "./compile.js";
 import { loadConfig } from "./config.js";
 import { colorize } from "./utils.js";
 
@@ -23,31 +21,10 @@ try {
   console.info(`Language directory: ${colorize("blue", config.output.path)}`);
   console.info(`Locales: ${colorize("blue", config.output.locales.join(", "))}`);
   console.info();
-  const localesPaths = config.output.locales.map((loc) =>
-    config.output.flat ? path.join(config.output.path, `${loc}.po`) : path.join(config.output.path, `${loc}/app.po`),
-  );
-
-  await fsPromises.mkdir(config.output.path, { recursive: true });
-  const jsonRes = await compilePoFiles(localesPaths);
-  const localeCount = Object.keys(jsonRes).length;
+  const { localeCount, files } = await compileTranslations(config);
   console.info(`${colorize("green", "Compiled json")}: ${colorize("grey", `${localeCount} locale(s)`)}`);
   console.info();
-  if (config.output.splitJson) {
-    await Promise.all(
-      config.output.locales.map(async (locale) => {
-        const outputPath = path.join(config.output.jsonPath, `${locale}.json`);
-        await fsPromises.writeFile(
-          outputPath,
-          JSON.stringify({
-            [locale]: jsonRes[locale],
-          }),
-        );
-        console.info(`${colorize("green", "Created")}: ${colorize("blue", outputPath)}`);
-      }),
-    );
-  } else {
-    const outputPath = config.output.jsonPath;
-    await fsPromises.writeFile(outputPath, JSON.stringify(jsonRes));
-    console.info(`${colorize("green", "Created")}: ${colorize("blue", outputPath)}`);
+  for (const file of files) {
+    console.info(`${colorize("green", file.changed ? "Created" : "Unchanged")}: ${colorize("blue", file.path)}`);
   }
 })();
