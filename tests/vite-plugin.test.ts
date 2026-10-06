@@ -150,6 +150,30 @@ describe("vite plugin", () => {
     );
   });
 
+  it("reports an error in the dev server when a .po file is deleted", async () => {
+    const { root, langDir, configPath, jsonPath } = await setupProject();
+    const logger = createLogger("silent");
+    const errorSpy = vi.spyOn(logger, "error");
+
+    server = await createServer({
+      root,
+      configFile: false,
+      customLogger: logger,
+      plugins: [gettext({ config: configPath })],
+      server: { middlewareMode: true, ws: false, watch: null },
+    });
+    await vi.waitFor(async () => expect(JSON.parse(await readFile(jsonPath, "utf-8")).fr.Hello).toBe("Bonjour"));
+
+    const poPath = join(langDir, "fr.po");
+    await rm(poPath);
+    server.watcher.emit("unlink", poPath);
+    await vi.waitFor(() =>
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("vue3-gettext: failed to compile translations"), {
+        timestamp: true,
+      }),
+    );
+  });
+
   it("recompiles in the dev server when a .po file changes, and survives a broken one", async () => {
     const { root, langDir, configPath, jsonPath } = await setupProject();
     const logger = createLogger("silent");
