@@ -5,8 +5,6 @@ import type { GettextConfigOptions, GetTextOptions, Language, LanguageData, Mess
 import { GetTextSymbol } from "./typeDefs";
 import { normalizeTranslations } from "./utilities";
 
-export { tokenize } from "./extract/tokenizer";
-export { type MsgInfo, parseSrc, makePO } from "./extract/parser";
 export { useGettext } from "./utilities";
 export type { Language, Message, LanguageData, Translations, GettextConfigOptions as Config, GetTextOptions };
 

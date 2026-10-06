@@ -1,7 +1,14 @@
 import PO from "pofile";
 import { Token, tokenize, TokenKind } from "./tokenizer.js";
-import { KeywordMapping } from "../typeDefs.js";
-import { assertIsDefined } from "../utilities.js";
+import type { KeywordMapping } from "../typeDefs.js";
+
+// Kept local rather than imported from ../utilities, which imports vue: the
+// extraction entry runs in Node and shouldn't load vue.
+function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
+  if (value === undefined || value === null) {
+    throw new Error(`${value} is not defined`);
+  }
+}
 
 type BaseMsg = { message: string; messagePlural?: string; context?: string };
 

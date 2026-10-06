@@ -87,8 +87,14 @@
     "vue-tsc": "^3.3.11"
   },
   "exports": {
-    "import": "./dist/index.js",
-    "types": "./dist/index.d.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./extract": {
+      "types": "./dist/extract.d.ts",
+      "import": "./dist/extract.js"
+    }
   },
   "module": "dist/index.js",
   "types": "./dist/index.d.ts",

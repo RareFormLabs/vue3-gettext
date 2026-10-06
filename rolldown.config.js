@@ -7,9 +7,20 @@ import pkg from "./package.json" with { type: "json" };
 // instances and broken reactivity in consumers).
 const external = [...Object.keys(pkg.peerDependencies ?? {}), ...Object.keys(pkg.dependencies ?? {})];
 
-export default defineConfig({
-  input: "./src/index.ts",
-  external,
-  plugins: [dts()],
-  output: [{ dir: "dist", format: "es" }],
-});
+export default defineConfig([
+  {
+    input: "./src/index.ts",
+    external,
+    plugins: [dts()],
+    output: [{ dir: "dist", format: "es" }],
+  },
+  {
+    // Node-only entry (depends on pofile -> fs), kept separate so it never ends
+    // up in the browser bundle.
+    input: { extract: "./src/extract/index.ts" },
+    platform: "node",
+    external,
+    plugins: [dts()],
+    output: [{ dir: "dist", format: "es" }],
+  },
+]);

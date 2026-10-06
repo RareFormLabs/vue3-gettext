@@ -192,6 +192,18 @@ CLI flags:
 - `--include-translated` retranslate entries that already have `msgstr` values
 - `--dry-run` call the provider without writing files
 
+## Programmatic API
+
+The parser behind `vue-gettext-extract` is available from a Node-only subpath. Its API is not stable.
+
+```ts
+import { parseSrc, makePO, tokenize } from "@rareformlabs/vue3-gettext/extract";
+
+const po = makePO("src/App.vue", parseSrc(source));
+```
+
+Before v6 these were exported from the package root, which made browser bundles import `pofile` (and Node's `fs`). Import them from `/extract` instead.
+
 ## Migrating from v4
 
 v5 requires Node 22.19 or newer. It rejects `translate.provider`, string-valued `translate.model`, and `translate.openai` and prints a migration example.
