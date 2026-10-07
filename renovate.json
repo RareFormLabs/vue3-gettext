@@ -19,9 +19,9 @@
       "automerge": true
     },
     {
-      "description": "Do not modify Vue peer dependency ranges (library compatibility).",
+      "description": "Do not modify Vue or Vite peer dependency ranges (library compatibility).",
       "matchDepTypes": ["peerDependencies"],
-      "matchPackageNames": ["vue", "@vue/compiler-sfc"],
+      "matchPackageNames": ["vue", "@vue/compiler-sfc", "vite"],
       "enabled": false
     }
   ]
