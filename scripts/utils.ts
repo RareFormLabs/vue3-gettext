@@ -27,7 +27,7 @@ export function execShellCommand(cmd: string): Promise<string> {
 }
 
 const terminalEsc = "\x1b";
-const terminalFontColorReset = "\x1b[0m";
+const terminalFontColorReset = "[0m";
 const terminalFontColors = {
   blue: "[34;1m",
   green: "[32m",
