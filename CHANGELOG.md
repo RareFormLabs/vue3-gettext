@@ -1,5 +1,31 @@
 # Changelog
 
+## [6.0.0](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v5.1.2...vue3-gettext-v6.0.0) (2026-10-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* `tokenize`, `parseSrc`, `makePO` and the `MsgInfo` type are no longer exported from `@rareformlabs/vue3-gettext`. Import them from `@rareformlabs/vue3-gettext/extract` instead. The package `exports` map now uses subpath keys (`.` and `./extract`), so deep imports outside those subpaths remain unavailable.
+
+### Features
+
+* **compile:** add prettyJson output option ([#307](https://github.com/RareFormLabs/vue3-gettext/issues/307)) ([d35fb24](https://github.com/RareFormLabs/vue3-gettext/commit/d35fb24a80c3d3ff577f2f84d643735caf465ba6))
+* move extraction API to a Node-only `/extract` subpath ([#310](https://github.com/RareFormLabs/vue3-gettext/issues/310)) ([3aeeaa4](https://github.com/RareFormLabs/vue3-gettext/commit/3aeeaa432184af55b11891ecc1ae2464b799a12d))
+* **vite:** add Vite plugin that compiles .po files on build and in dev ([#308](https://github.com/RareFormLabs/vue3-gettext/issues/308)) ([d35fb24](https://github.com/RareFormLabs/vue3-gettext/commit/d35fb24a80c3d3ff577f2f84d643735caf465ba6))
+
+
+### Bug Fixes
+
+* **deps:** update dependency @earendil-works/pi-ai to ^0.86.0 ([#290](https://github.com/RareFormLabs/vue3-gettext/issues/290)) ([f2412db](https://github.com/RareFormLabs/vue3-gettext/commit/f2412dbb5d5ffee7bebe94d9399e130594ae11eb))
+* **deps:** update dependency @earendil-works/pi-ai to ^0.86.1 ([#293](https://github.com/RareFormLabs/vue3-gettext/issues/293)) ([f44ff15](https://github.com/RareFormLabs/vue3-gettext/commit/f44ff151237f9ff7e13b9afb1dcf712f9d4163c6))
+* **deps:** update dependency @earendil-works/pi-ai to ^0.87.0 ([#296](https://github.com/RareFormLabs/vue3-gettext/issues/296)) ([8fbbe70](https://github.com/RareFormLabs/vue3-gettext/commit/8fbbe706fbbc69c45e648a343cc29c6c1112a26a))
+* **deps:** update dependency @earendil-works/pi-ai to ^0.87.1 ([#297](https://github.com/RareFormLabs/vue3-gettext/issues/297)) ([b8b4a88](https://github.com/RareFormLabs/vue3-gettext/commit/b8b4a880b211bfc941f6dda604968f234ef10a6e))
+* **deps:** update dependency @earendil-works/pi-ai to ^0.99.1 ([#309](https://github.com/RareFormLabs/vue3-gettext/issues/309)) ([e57c26a](https://github.com/RareFormLabs/vue3-gettext/commit/e57c26aacce53f4bb89f7bcd13c35954b421f467))
+* **deps:** update dependency @earendil-works/pi-ai to v1 ([#302](https://github.com/RareFormLabs/vue3-gettext/issues/302)) ([6b5bef8](https://github.com/RareFormLabs/vue3-gettext/commit/6b5bef8cd6bec93b7ef5afb1287be43e400a406b))
+* **deps:** update dependency chalk to ^6.0.1 ([#304](https://github.com/RareFormLabs/vue3-gettext/issues/304)) ([928de63](https://github.com/RareFormLabs/vue3-gettext/commit/928de637077f193a5ba119ad1acc8d5318c0de34))
+* **scripts:** remove doubled escape in colorize reset sequence ([#317](https://github.com/RareFormLabs/vue3-gettext/issues/317)) ([ad89648](https://github.com/RareFormLabs/vue3-gettext/commit/ad89648232d4675a1497790423ae9de4ff326e03))
+* **vite:** report deleted .po catalogs in the dev server ([#314](https://github.com/RareFormLabs/vue3-gettext/issues/314)) ([cb5acb8](https://github.com/RareFormLabs/vue3-gettext/commit/cb5acb8c2d25034d9b5ca06cb72eb3aa2a26d5e9))
+
 ## [5.1.2](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v5.1.1...vue3-gettext-v5.1.2) (2026-09-22)
 
 
