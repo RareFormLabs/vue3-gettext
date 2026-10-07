@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.2](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v6.0.1...vue3-gettext-v6.0.2) (2026-10-07)
+
+
+### Bug Fixes
+
+* lower the node engines range to &gt;=22.19.0 ([#322](https://github.com/RareFormLabs/vue3-gettext/issues/322)) ([249e0b9](https://github.com/RareFormLabs/vue3-gettext/commit/249e0b943b47ee18c940d1dd190445805a5f521a))
+
 ## [6.0.1](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v6.0.0...vue3-gettext-v6.0.1) (2026-10-07)
 
 
