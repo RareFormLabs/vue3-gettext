@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.1](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v6.0.0...vue3-gettext-v6.0.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* widen the vite peer dependency range back to &gt;=5.0.0 ([#320](https://github.com/RareFormLabs/vue3-gettext/issues/320)) ([f1b23c8](https://github.com/RareFormLabs/vue3-gettext/commit/f1b23c841c67bf7165e839b6360a45b65f30ac8d))
+
 ## [6.0.0](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v5.1.2...vue3-gettext-v6.0.0) (2026-10-07)
 
 
