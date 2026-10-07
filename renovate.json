@@ -23,6 +23,11 @@
       "matchDepTypes": ["peerDependencies"],
       "matchPackageNames": ["vue", "@vue/compiler-sfc", "vite"],
       "enabled": false
+    },
+    {
+      "description": "Do not raise the engines.node range; it is the minimum consumers need, set by @earendil-works/pi-ai.",
+      "matchDepTypes": ["engines"],
+      "enabled": false
     }
   ]
 }

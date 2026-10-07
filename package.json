@@ -53,7 +53,7 @@
     "package:publish": "npm publish"
   },
   "engines": {
-    "node": ">= 22.23.3"
+    "node": ">= 22.19.0"
   },
   "peerDependencies": {
     "vite": ">=5.0.0",
