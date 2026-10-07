@@ -144,9 +144,14 @@ describe("vite plugin", () => {
       expect(Object.keys(server!.watcher.getWatched()).some((dir) => langDirPaths.includes(dir))).toBe(true),
     );
 
-    await writeFile(poPath, po("fr", { Hello: "Salut" }));
-    await vi.waitFor(async () =>
-      expect(JSON.parse(await readFile(jsonPath, "utf-8"))).toEqual({ fr: { Hello: "Salut" } }),
+    // getWatched() lists the directory before the watcher is actually listening (with FSEvents the native
+    // stream starts asynchronously), so a single write can go unnoticed. Rewrite until a recompile picks it up.
+    await vi.waitFor(
+      async () => {
+        await writeFile(poPath, po("fr", { Hello: "Salut" }));
+        expect(JSON.parse(await readFile(jsonPath, "utf-8"))).toEqual({ fr: { Hello: "Salut" } });
+      },
+      { timeout: 5000, interval: 100 },
     );
   });
 
