@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.3](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v6.0.2...vue3-gettext-v6.0.3) (2026-10-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @earendil-works/pi-ai to ^1.1.0 ([#332](https://github.com/RareFormLabs/vue3-gettext/issues/332)) ([2e95aa9](https://github.com/RareFormLabs/vue3-gettext/commit/2e95aa9dbabd0795cd1dda2877d99511ce8bf969))
+
 ## [6.0.2](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v6.0.1...vue3-gettext-v6.0.2) (2026-10-07)
 
 
