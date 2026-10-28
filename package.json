@@ -116,7 +116,7 @@
   ],
   "overrides": {
     "glob": {
-      "minimatch": "^10.2.6"
+      "minimatch": "^11.0.3"
     },
     "typescript": "$typescript"
   }
