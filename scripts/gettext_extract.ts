@@ -9,7 +9,7 @@ import { loadConfig } from "./config.js";
 import { extractAndCreatePOT } from "./extract.js";
 import { colorize, execShellCommand, ShellCommandError } from "./utils.js";
 import PO from "pofile";
-import { resolvePoContent, TranslationConflictError } from "./po-merge.js";
+import { MergeConflictError, resolvePoContent } from "./po-merge.js";
 
 const optionDefinitions: OptionDefinition[] = [{ name: "config", alias: "c", type: String }];
 let options: {
@@ -144,7 +144,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  if (error instanceof TranslationConflictError) {
+  if (error instanceof MergeConflictError) {
     console.error(colorize("red", error.message));
   } else if (error instanceof ShellCommandError) {
     console.error(colorize("red", error.message));

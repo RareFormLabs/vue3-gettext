@@ -4,6 +4,7 @@ import {
   assertNoConflictMarkers,
   ConflictMarkersError,
   hasConflictMarkers,
+  PluralFormsConflictError,
   resolvePoContent,
   splitConflictSides,
   TranslationConflictError,
@@ -34,6 +35,18 @@ describe("splitConflictSides", () => {
       "fr.po",
     );
     expect(sides).toEqual({ ours: "a\nours\nz", theirs: "a\ntheirs\nz" });
+  });
+
+  it("accepts markers longer than seven characters from conflict-marker-size", () => {
+    expect(hasConflictMarkers("<<<<<<<< HEAD\n")).toBe(true);
+    const sides = splitConflictSides("a\n<<<<<<<< HEAD\nours\n========\ntheirs\n>>>>>>>> main\nz", "fr.po");
+    expect(sides).toEqual({ ours: "a\nours\nz", theirs: "a\ntheirs\nz" });
+  });
+
+  it("rejects markers whose length does not match the opening marker", () => {
+    expect(() => splitConflictSides("<<<<<<<< HEAD\nours\n=======\ntheirs\n>>>>>>>> main\n", "fr.po")).toThrow(
+      "fr.po:3: unexpected merge conflict marker",
+    );
   });
 
   it("rejects malformed markers", () => {
@@ -102,6 +115,24 @@ msgstr "Salut"
 
     expect(() => resolvePoContent(content, "fr.po")).toThrow(TranslationConflictError);
     expect(() => resolvePoContent(content, "fr.po")).toThrow('"Hello": "Bonjour" vs "Salut"');
+  });
+
+  it("refuses to merge sides with different Plural-Forms headers", () => {
+    const content = `msgid ""
+msgstr ""
+"Language: fr\\n"
+<<<<<<< HEAD
+"Plural-Forms: nplurals=2; plural=(n > 1);\\n"
+=======
+"Plural-Forms: nplurals=3; plural=(n == 0 ? 0 : n == 1 ? 1 : 2);\\n"
+>>>>>>> main
+
+msgid "Hello"
+msgstr "Bonjour"
+`;
+
+    expect(() => resolvePoContent(content, "fr.po")).toThrow(PluralFormsConflictError);
+    expect(() => resolvePoContent(content, "fr.po")).toThrow("different Plural-Forms headers");
   });
 
   it("keeps messages with the same msgid but different contexts apart", () => {

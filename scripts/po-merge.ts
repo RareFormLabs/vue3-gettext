@@ -2,7 +2,7 @@ import PO from "pofile";
 
 type PoItem = InstanceType<typeof PO.Item>;
 
-const conflictMarker = /^(<{7}|\|{7}|={7}|>{7})(?: .*)?\r?$/;
+const conflictMarker = /^(<{7,}|\|{7,}|={7,}|>{7,})(?: .*)?\r?$/;
 
 export const hasConflictMarkers = (content: string) => content.split("\n").some((line) => conflictMarker.test(line));
 
@@ -30,13 +30,19 @@ export const splitConflictSides = (content: string, filePath: string) => {
   const ours: string[] = [];
   const theirs: string[] = [];
   let section: "both" | "ours" | "base" | "theirs" = "both";
+  let markerLength = 0;
 
   content.split("\n").forEach((line, index) => {
-    const marker = line.match(conflictMarker)?.[1]?.[0];
+    const markerRun = line.match(conflictMarker)?.[1];
+    const marker = markerRun?.[0];
     const unexpected = () => new Error(`${filePath}:${index + 1}: unexpected merge conflict marker "${line.trim()}"`);
+    if (markerRun && marker !== "<" && markerRun.length !== markerLength) {
+      throw unexpected();
+    }
     if (marker === "<") {
       if (section !== "both") throw unexpected();
       section = "ours";
+      markerLength = markerRun!.length;
     } else if (marker === "|") {
       if (section !== "ours") throw unexpected();
       section = "base";
@@ -121,7 +127,25 @@ const describeConflict = (group: PoItem[]) => {
   return `  ${JSON.stringify(label)}: ${[...new Set(translations)].join(" vs ")}`;
 };
 
-export class TranslationConflictError extends Error {
+export class MergeConflictError extends Error {
+  name = "MergeConflictError";
+}
+
+export class PluralFormsConflictError extends MergeConflictError {
+  name = "PluralFormsConflictError";
+
+  constructor(filePath: string, ours: string, theirs: string) {
+    super(
+      [
+        `${filePath} has merge conflicts where the two sides use different Plural-Forms headers:`,
+        `  ${JSON.stringify(ours)} vs ${JSON.stringify(theirs)}`,
+        "Keep one Plural-Forms header, remove the conflict markers, and run the command again.",
+      ].join("\n"),
+    );
+  }
+}
+
+export class TranslationConflictError extends MergeConflictError {
   constructor(filePath: string, conflicts: PoItem[][]) {
     super(
       [
@@ -147,7 +171,16 @@ export const resolvePoContent = (content: string, filePath: string) => {
   if (hadConflictMarkers) {
     const sides = splitConflictSides(content, filePath);
     po = PO.parse(sides.ours);
-    po.items = [...po.items, ...PO.parse(sides.theirs).items];
+    const theirs = PO.parse(sides.theirs);
+    const ourPluralForms = po.headers["Plural-Forms"];
+    const theirPluralForms = theirs.headers["Plural-Forms"];
+    if (ourPluralForms && theirPluralForms && ourPluralForms !== theirPluralForms) {
+      throw new PluralFormsConflictError(filePath, ourPluralForms, theirPluralForms);
+    }
+    if (!ourPluralForms && theirPluralForms) {
+      po.headers["Plural-Forms"] = theirPluralForms;
+    }
+    po.items = [...po.items, ...theirs.items];
   } else {
     po = PO.parse(content);
   }
