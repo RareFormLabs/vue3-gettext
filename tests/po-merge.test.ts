@@ -43,6 +43,12 @@ describe("splitConflictSides", () => {
     expect(sides).toEqual({ ours: "a\nours\nz", theirs: "a\ntheirs\nz" });
   });
 
+  it("accepts markers shorter than seven characters from conflict-marker-size", () => {
+    expect(hasConflictMarkers("<<< HEAD\n")).toBe(true);
+    const sides = splitConflictSides("a\n<<< HEAD\nours\n===\ntheirs\n>>> main\nz", "fr.po");
+    expect(sides).toEqual({ ours: "a\nours\nz", theirs: "a\ntheirs\nz" });
+  });
+
   it("rejects markers whose length does not match the opening marker", () => {
     expect(() => splitConflictSides("<<<<<<<< HEAD\nours\n=======\ntheirs\n>>>>>>>> main\n", "fr.po")).toThrow(
       "fr.po:3: unexpected merge conflict marker",

@@ -2,7 +2,7 @@ import PO from "pofile";
 
 type PoItem = InstanceType<typeof PO.Item>;
 
-const conflictMarker = /^(<{7,}|\|{7,}|={7,}|>{7,})(?: .*)?\r?$/;
+const conflictMarker = /^(<+|\|+|=+|>+)(?: .*)?\r?$/;
 
 export const hasConflictMarkers = (content: string) => content.split("\n").some((line) => conflictMarker.test(line));
 
