@@ -1,5 +1,20 @@
 # Changelog
 
+## [6.0.3](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v6.0.2...vue3-gettext-v6.0.3) (2026-11-16)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @earendil-works/pi-ai to ^1.1.0 ([#332](https://github.com/RareFormLabs/vue3-gettext/issues/332)) ([2e95aa9](https://github.com/RareFormLabs/vue3-gettext/commit/2e95aa9dbabd0795cd1dda2877d99511ce8bf969))
+* **deps:** update dependency @earendil-works/pi-ai to ^1.2.0 ([#344](https://github.com/RareFormLabs/vue3-gettext/issues/344)) ([1ec8f6b](https://github.com/RareFormLabs/vue3-gettext/commit/1ec8f6baf00225235d085f22f0b0eb8b3e54022c))
+* **deps:** update dependency @earendil-works/pi-ai to ^1.3.0 ([#347](https://github.com/RareFormLabs/vue3-gettext/issues/347)) ([2f5b91a](https://github.com/RareFormLabs/vue3-gettext/commit/2f5b91a09a4c8bde72f125e1db5292dfdcd337f6))
+* **deps:** update dependency @earendil-works/pi-ai to ^1.4.0 ([#360](https://github.com/RareFormLabs/vue3-gettext/issues/360)) ([ccec7de](https://github.com/RareFormLabs/vue3-gettext/commit/ccec7de161bd58d090be7eeb6df1fdde0515fef9))
+* **deps:** update dependency glob to ^14.0.4 ([#386](https://github.com/RareFormLabs/vue3-gettext/issues/386)) ([7d00d49](https://github.com/RareFormLabs/vue3-gettext/commit/7d00d497a7e4911637f11847e308a50e187355e4))
+* **deps:** update dependency glob to v14 [security] ([#364](https://github.com/RareFormLabs/vue3-gettext/issues/364)) ([8659e66](https://github.com/RareFormLabs/vue3-gettext/commit/8659e66ec45030c4464abdc02b5c46377d708370))
+* **deps:** update dependency lilconfig to ^3.1.4 ([#348](https://github.com/RareFormLabs/vue3-gettext/issues/348)) ([ca572d7](https://github.com/RareFormLabs/vue3-gettext/commit/ca572d7b38310e5e906553871cc51eb3c7116564))
+* **extract:** resolve merge conflict markers in PO files ([#381](https://github.com/RareFormLabs/vue3-gettext/issues/381)) ([432ef8a](https://github.com/RareFormLabs/vue3-gettext/commit/432ef8af2b31f81b0b4e863318ee9d570c0aac1f))
+* **translate:** support @earendil-works/pi-ai 1.5 ([#384](https://github.com/RareFormLabs/vue3-gettext/issues/384)) ([9efaba9](https://github.com/RareFormLabs/vue3-gettext/commit/9efaba9b39da5ca16d461c022092da080ed85601))
+
 ## [6.0.2](https://github.com/RareFormLabs/vue3-gettext/compare/vue3-gettext-v6.0.1...vue3-gettext-v6.0.2) (2026-10-07)
 
 
