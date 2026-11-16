@@ -1,5 +1,4 @@
 import {
-  Type,
   validateToolCall,
   type Api,
   type AuthContext,
@@ -19,20 +18,25 @@ const TRANSLATION_TIMEOUT_MS = 10 * 60 * 1000;
 const translationTool: Tool = {
   name: TRANSLATION_TOOL_NAME,
   description: "Submit the complete set of translated gettext entries.",
-  parameters: Type.Object(
-    {
-      translations: Type.Array(
-        Type.Object(
-          {
-            key: Type.String(),
-            msgstr: Type.Array(Type.String()),
+  parameters: {
+    type: "object",
+    properties: {
+      translations: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            key: { type: "string" },
+            msgstr: { type: "array", items: { type: "string" } },
           },
-          { additionalProperties: false },
-        ),
-      ),
+          required: ["key", "msgstr"],
+          additionalProperties: false,
+        },
+      },
     },
-    { additionalProperties: false },
-  ),
+    required: ["translations"],
+    additionalProperties: false,
+  },
   constrainedSampling: { type: "json_schema", strict: "prefer" },
 };
 
