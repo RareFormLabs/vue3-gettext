@@ -2,6 +2,7 @@ import fsPromises from "node:fs/promises";
 import path from "node:path";
 import PO from "pofile";
 import { GettextConfig } from "../src/typeDefs.js";
+import { assertNoConflictMarkers } from "./po-merge.js";
 
 export type TranslationEntry = {
   key: string;
@@ -129,6 +130,7 @@ export const applyTranslations = (
 
 export const loadPoFile = async (filePath: string) => {
   const fileContent = await fsPromises.readFile(filePath, { encoding: "utf-8" });
+  assertNoConflictMarkers(fileContent, filePath);
   return PO.parse(fileContent);
 };
 

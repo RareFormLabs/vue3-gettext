@@ -207,6 +207,105 @@ msgstr "Bonjour"
     });
   });
 
+  it("resolves merge conflict markers instead of folding them into translations", async () => {
+    await withTempDir(async (tmpDir) => {
+      for (const d of ["src", "scripts", "node_modules"]) {
+        await symlink(join(cwd(), d), join(tmpDir, d));
+      }
+      await writeFile(join(tmpDir, "package.json"), JSON.stringify({ name: "test", type: "module" }));
+      await writeFile(
+        join(tmpDir, "gettext.config.js"),
+        `export default {
+          input: { path: './srctest', include: ['*.js'] },
+          output: { path: './srctest/lang', locales: ['fr'], addLocation: 'never' }
+        };`,
+      );
+
+      await mkdir(join(tmpDir, "srctest", "lang"), { recursive: true });
+      await writeFile(
+        join(tmpDir, "srctest", "test.js"),
+        `$gettext('Close'); $gettext('Ours'); $gettext('Theirs'); $gettext('After')`,
+      );
+      const poPath = join(tmpDir, "srctest", "lang", "fr.po");
+      await writeFile(
+        poPath,
+        `msgid ""
+msgstr ""
+"Language: fr\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\\n"
+
+msgid "Close"
+msgstr "Fermer"
+
+<<<<<<< HEAD
+msgid "Ours"
+msgstr "Le nôtre"
+=======
+msgid "Theirs"
+msgstr "Le leur"
+>>>>>>> main
+
+msgid "After"
+msgstr "Après"
+
+msgid "Close"
+msgstr "Fermer"
+`,
+      );
+
+      const result = spawnSync("npx", ["tsx", "./scripts/gettext_extract.ts"], { cwd: tmpDir, encoding: "utf-8" });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("Resolved merge conflict markers");
+      const poContent = (await readFile(poPath)).toString();
+      expect(poContent).not.toMatch(/<<<<<<<|=======|>>>>>>>/);
+      expect(poContent).toContain('msgid "Ours"\nmsgstr "Le nôtre"');
+      expect(poContent).toContain('msgid "Theirs"\nmsgstr "Le leur"');
+      expect(poContent).toContain('msgid "After"\nmsgstr "Après"');
+      expect(poContent.match(/msgid "Close"/g)).toHaveLength(1);
+    });
+  });
+
+  it("stops without touching the file when a conflict hides two translations", async () => {
+    await withTempDir(async (tmpDir) => {
+      for (const d of ["src", "scripts", "node_modules"]) {
+        await symlink(join(cwd(), d), join(tmpDir, d));
+      }
+      await writeFile(join(tmpDir, "package.json"), JSON.stringify({ name: "test", type: "module" }));
+      await writeFile(
+        join(tmpDir, "gettext.config.js"),
+        `export default {
+          input: { path: './srctest', include: ['*.js'] },
+          output: { path: './srctest/lang', locales: ['fr'] }
+        };`,
+      );
+
+      await mkdir(join(tmpDir, "srctest", "lang"), { recursive: true });
+      await writeFile(join(tmpDir, "srctest", "test.js"), `$gettext('Hello')`);
+      const poPath = join(tmpDir, "srctest", "lang", "fr.po");
+      const conflicted = `msgid ""
+msgstr ""
+"Language: fr\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+
+msgid "Hello"
+<<<<<<< HEAD
+msgstr "Bonjour"
+=======
+msgstr "Salut"
+>>>>>>> main
+`;
+      await writeFile(poPath, conflicted);
+
+      const result = spawnSync("npx", ["tsx", "./scripts/gettext_extract.ts"], { cwd: tmpDir, encoding: "utf-8" });
+
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain('"Hello": "Bonjour" vs "Salut"');
+      expect((await readFile(poPath)).toString()).toBe(conflicted);
+    });
+  });
+
   it("should exit zero for a normal extraction run", async () => {
     await withTempDir(async (tmpDir) => {
       for (const d of ["src", "scripts", "node_modules"]) {
