@@ -115,9 +115,6 @@
     ".env.gettext.example"
   ],
   "overrides": {
-    "glob": {
-      "minimatch": "^10.2.6"
-    },
     "typescript": "$typescript"
   }
 }
