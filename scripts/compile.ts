@@ -5,6 +5,7 @@ import fsPromises from "fs/promises";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { GettextConfig, LanguageData, MessageContext, Translations } from "../src/typeDefs.js";
+import { assertNoConflictMarkers } from "./po-merge.js";
 
 /**
  * Returns a sanitized po data dictionary where:
@@ -77,6 +78,7 @@ export const compilePoFiles = async (localesPaths: string[]) => {
   await Promise.all(
     localesPaths.map(async (lp) => {
       const fileContent = await fsPromises.readFile(lp, { encoding: "utf-8" });
+      assertNoConflictMarkers(fileContent, lp);
       const data = po2json(fileContent);
       const lang = data.headers.Language;
       if (lang && !translations[lang]) {

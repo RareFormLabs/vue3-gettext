@@ -145,11 +145,18 @@ branches that change any translation will conflict. With `prettyJson`, keys are 
 line, so unrelated changes merge cleanly. This does not affect your bundle size when the JSON is imported through a
 bundler such as Vite, which re-serializes and minifies it.
 
+If a merge leaves a PO file with conflict markers, run extraction without resolving it by hand. Extraction keeps the
+entries from both sides of each conflict and removes the markers. The `.pot` file is regenerated from source, so its
+conflicts need no handling. When both sides translate the same message differently, extraction stops, lists those
+messages, and leaves the file untouched for you to pick one translation each. Compiling, the Vite plugin, and AI
+translation refuse a PO file that still has conflict markers, so a marker can never end up inside a translation.
+
 If a merge leaves the same PO message more than once, extraction removes duplicate entries when their gettext key
-(context, singular ID, and plural ID) and translations match. Comments, references, and flags from each copy are
-preserved. Duplicate entries with different translations are left untouched so `msgmerge` can report them for manual
-resolution instead of discarding a translation. After resolving PO catalogs, run the full refresh command to regenerate
-compiled JSON catalogs; Git may still require `git add` to mark those generated files as resolved.
+(context, singular ID, and plural ID) and translations match, or when only one copy is translated. Comments,
+references, and flags from each copy are preserved. Duplicate entries with different translations are left untouched
+so `msgmerge` can report them for manual resolution instead of discarding a translation. After resolving PO catalogs,
+run the full refresh command to regenerate compiled JSON catalogs; Git may still require `git add` to mark those
+generated files as resolved.
 
 ### Mechanical Default Locales (Auto-fill)
 

@@ -90,7 +90,7 @@ describe("vite plugin", () => {
         plugins: [gettext({ config: configPath })],
         build: { write: false, rollupOptions: { input: join(root, "main.js") } },
       }),
-    ).rejects.toThrow("No Language headers found!");
+    ).rejects.toThrow("has unresolved merge conflict markers");
   });
 
   it("fails Vitest startup when initial PO compilation fails", async () => {
@@ -107,7 +107,7 @@ describe("vite plugin", () => {
         plugins: [gettext({ config: configPath })],
         server: { middlewareMode: true, ws: false },
       }).then((s) => (server = s)),
-    ).rejects.toThrow("No Language headers found!");
+    ).rejects.toThrow("has unresolved merge conflict markers");
   });
 
   it.each(["change", "add"])("recovers from initial PO compilation failure on %s", async (event) => {
